@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Define a class to implement a Monte Carlo search tree.
+Defines a class to implement a Monte Carlo search tree.
 """
 
 from __future__ import division
@@ -21,18 +21,18 @@ sys.path.insert(0, PROJECT_ROOT)
 from pyaixi import util
 
 # An enumeration type used to specify the type of Monte Carlo search node.
-# Chance nodes represent a set of possible observation
-# (one child per observation) while decision nodes
-# represent sets of possible actions (one child per action).
+# Chance nodes represent sets of possible observations (one child per observation).
+# Decision nodes represent sets of possible actions (one child per action).
 # Decision and chance nodes alternate.
 nodetype_enum = util.enum('chance', 'decision')
 
-# Define some short cuts for ease of reference.
+# Defines some shortcuts for ease of reference.
 chance_node = nodetype_enum.chance
 decision_node = nodetype_enum.decision
 
 class MonteCarloSearchNode:
     """ A class to represent a node in the Monte Carlo search tree.
+
         The nodes in the search tree represent simulated actions and percepts
         between an agent following an upper confidence bounds (UCB) policy and a generative
         model of the environment represented by a context tree.
@@ -41,10 +41,10 @@ class MonteCarloSearchNode:
         available actions through sampling. Sampling proceeds several time steps
         into the future according to the size of the agent's horizon.
         (`MC_AIXI_CTW_Agent.horizon`)
- 
-        The nodes are one of two types (`nodetype_enum`), decision nodes are those
-        whose children represent actions from the agent and chance nodes are those
-        whose children represent percepts from the environment.
+
+        The nodes are one of two types (`nodetype_enum`):
+         - Decision nodes have children chance nodes, linked by agent actions.
+         - Chance nodes have child decision nodes, linked by environmental percepts.
 
         Each MonteCarloSearchNode maintains several bits of information:
 
@@ -107,7 +107,7 @@ class MonteCarloSearchNode:
         # TODO: implement
         reward = 0.0
 
-        
+
         return reward
     # end def
 
@@ -119,7 +119,7 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         best_action = None
-        
+
 
         return best_action
     # end def

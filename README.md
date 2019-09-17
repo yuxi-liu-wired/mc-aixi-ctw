@@ -2,7 +2,7 @@
 
 Implements AIXI, the universal AI agent, and tests it in a wide variety of game environments.
 
-A skeletal implementation, taken from [gkassel/pyaixi](https://github.com/gkassel/pyaixi), is given by the instructor, upon which we added most of the meat.
+A skeletal implementation written by G. Kassel, taken from [gkassel/pyaixi](https://github.com/gkassel/pyaixi), is given by the instructor, upon which we added most of the meat.
 
 #### Authors
 

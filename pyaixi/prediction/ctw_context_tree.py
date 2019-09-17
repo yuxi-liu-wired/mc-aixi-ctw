@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Define classes to implement context trees according to the Context Tree Weighting algorithm.
+Defines classes to implement context trees according to the Context Tree Weighting algorithm.
 """
 
 from __future__ import division
@@ -32,7 +32,7 @@ class CTWContextTreeNode:
         Then the weighted block probability of observing `h_n` at node `n` is given by
 
           P_w^n(h_n) :=
-  
+
             Pr_kt(h_n)                        (if n is a leaf node)
             1/2 Pr_kt(h_n) +
             1/2 P_w^n0(h_n0) P_w^n1(h_n1)     (otherwise)
@@ -180,7 +180,7 @@ class CTWContextTreeNode:
                   log(1/2 Pr_kt(h_n)) + 1/2 P^n0_w x P^n1_w)
                                             (otherwise)
             and stores the value in log_probability.
-     
+
             Because of numerical issues, the implementation works directly with the
             log probabilities `log(Pr_kt(h_n)`, `log(P^n0_w)`,
             and `log(P^n1_w)` rather than the normal probabilities.
@@ -337,7 +337,7 @@ class CTWContextTree:
 
     def revert(self, symbol_count = 1):
         """ Restores the context tree to its state prior to a specified number of updates.
-     
+
             - `num_symbols`: the number of updates (symbols) to revert. (Default of 1.)
         """
 

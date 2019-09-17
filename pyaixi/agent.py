@@ -13,10 +13,10 @@ import random
 
 from pyaixi import util
 
-# Define a enumeration to represent what type of environment update has been performed.
+# Defines a enumeration to represent what type of environment update has been performed.
 update_enum = util.enum('action_update', 'percept_update')
 
-# Define some short cuts for ease of reference.
+# Defines some short cuts for ease of reference.
 action_update = update_enum.action_update
 percept_update = update_enum.percept_update
 
@@ -133,7 +133,7 @@ class Agent:
     # end def
 
     def model_update_action(self, action):
-        """ Update the agent's model of the world with an action from the
+        """ Update the agent's environment model with an action from the
             environment.
 
             - `action`: the action that was performed.
@@ -144,7 +144,7 @@ class Agent:
     # end def
 
     def model_update_percept(self, observation, reward):
-        """ Update the agent's model of the world with a percept from the
+        """ Update the agent's environment model with a percept from the
             environment.
 
             - `observation`: the observation that was received.

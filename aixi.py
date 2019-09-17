@@ -208,7 +208,7 @@ def main(argv):
         to the standard output and exits.
     """
 
-    # Define some default configuration values.
+    # Defines some default configuration values.
     default_options = {}
     default_options["agent"]           = "mc_aixi_ctw"
     default_options["agent-horizon"]   = 5

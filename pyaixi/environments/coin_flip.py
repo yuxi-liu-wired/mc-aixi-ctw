@@ -19,18 +19,17 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-# Define a enumeration to represent coin flip actions, which is a prediction of the coin landing on
+# Defines an enumeration to represent agent action: a prediction of whether the coin will land on
 # heads or tails.
 coin_flip_action_enum = util.enum('aTails', 'aHeads')
 
-# Define a enumeration to represent coin flip observations e.g. the coin landed on heads or tails.
+# Defines an enumeration to represent agent observation: whether the coin landed on heads or tails.
 coin_flip_observation_enum = util.enum('oTails', 'oHeads')
 
-# Define a enumeration to represent coin flip rewards e.g. win or lose, for correcting predicting
-# the coin flip.
+# Defines an enumeration to represent agent reward: whether the gaent predicted correctly.
 coin_flip_reward_enum = util.enum('rLose', 'rWin')
 
-# Define some shorthand notation for ease of reference.
+# Defines some shorthand notation for ease of reference.
 aHeads = coin_flip_action_enum.aHeads
 aTails = coin_flip_action_enum.aTails
 
@@ -75,19 +74,20 @@ class CoinFlip(environment.Environment):
              - `options` is a dictionary of named options and their values.
 
             The following options in `options` are optional:
+            
              - `coin-flip-p`: the probability that the coin will land on heads. (Defaults to 0.7.)
         """
 
         # Set up the base environment.
         environment.Environment.__init__(self, options = options)
 
-        # Define the acceptable action values.
+        # Defines the acceptable action values.
         self.valid_actions = list(coin_flip_action_enum.keys())
 
-        # Define the acceptable observation values.
+        # Defines the acceptable observation values.
         self.valid_observations = list(coin_flip_observation_enum.keys())
 
-        # Define the acceptable reward values.
+        # Defines the acceptable reward values.
         self.valid_rewards = list(coin_flip_reward_enum.keys())
 
         # Determine the probability of the coin landing on heads.

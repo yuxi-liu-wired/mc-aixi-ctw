@@ -82,8 +82,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
          - `decode_action()`
          - `decode_observation()`
-         - `decode_percept()`
          - `decode_reward()`
+         - `decode_percept()`
          - `encode_action()`
          - `encode_percept()`
 
@@ -119,7 +119,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
                                   Defaults to '0', which is indefinite learning.
         """
 
-        # Set up the base agent options, which handles getting and setting the learning period, amongst other basic values.
+        # Sets up the base agent options, which handles getting and setting the
+        # learning period, amongst other basic values.
         agent.Agent.__init__(self, environment = environment, options = options)
 
         # The agent's context tree depth.
@@ -226,8 +227,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def generate_action(self):
-        """ Returns an action generated according to the agent's history
-            statistics by doing rejection sampling from the context tree.
+        """ Returns an action, distributed according to the agent's history
+            statistics, by sampling from the context tree.
         """
 
         # TODO: implement
@@ -235,8 +236,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def generate_percept(self):
-        """ Returns a percept (an observation, reward pair) distributed according to the agent's history
-            statistics by sampling from the context tree.
+        """ Returns a percept (observation, reward), distributed according to the agent's history
+            statistics, by sampling from the context tree.
         """
 
         # TODO: implement
@@ -245,7 +246,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def generate_percept_and_update(self):
-        """ Returns a percept (an observation, reward pair) distributed according to the agent's history
+        """ Returns a percept (observation, reward), distributed according to the agent's history
             statistics, after updating the context tree with it.
         """
 
@@ -260,6 +261,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `action`: the action we wish to find the likelihood of.
         """
         # TODO: implement
+
+        return None
     # end def
 
     def history_size(self):
@@ -278,7 +281,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def model_revert(self, undo_instance):
-        """ Revert the agent's internal model of the world to that of a previous time cycle,
+        """ Revert the agent's internal environment model to that of a previous time cycle,
             using the given undo class instance.
         """
 
@@ -292,33 +295,33 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def model_update_action(self, action):
-        """ Update the agent's model of the world with a percept from the
-            environment.
+        """ Updates the agent's environment model with a percept from the environment.
 
-            - `observation`: the observation that was received.
-            - `reward`: the reward that was received.
+            - `action`: the action that the agent performed.
         """
 
-        # The last update must have been a percept, else this action update is invalid.
+        # The action must be valid.
         assert self.environment.is_valid_action(action), "Invalid action given."
+
+        # The last update must have been a percept, else this action update is invalid.
         assert self.last_update == percept_update, "Can only perform an action update after a percept update."
 
-        # Update the agent's internal model of the world after performing an action.
+        # Update the agent's internal environment model after performing an action.
 
         # Get the symbols that represent this action.
         action_symbols = self.encode_action(action)
 
         # Update the context tree.
-        self.context_tree.update_history(action_symbols);
+        self.context_tree.update_history(action_symbols)
 
         # Update other properties.
-        self.age += 1;
+        self.age += 1
         self.last_update = action_update
     # end def
 
     def model_update_percept(self, observation, reward):
-        """ Update the agent's model of the world with a percept from the
-            environment.
+        """ Updates the agent's environment model with percept (observation, reward)
+            from the environment.
 
             - `observation`: the observation that was received.
             - `reward`: the reward that was received.
@@ -347,11 +350,10 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def percept_probability(self, observation, reward):
-        """ Returns the probability of receiving a particular percept
-            (the given observation and reward) according to the agent's environment model.
+        """ Returns the probability of receiving percept (observation, reward),
+            according to the agent's environment model.
 
             - `observation`: the observation part of the percept we wish to find the likelihood of.
-
             - `reward`: the reward part of the percept we wish to find the likelihood of.
         """
 
@@ -360,7 +362,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def playout(self, horizon):
-        """ Simulate agent/enviroment interaction for a specified amount of steps
+        """ Simulates agent/enviroment interaction for a specified amount of steps
             (the given horizon value) where the agent actions are chosen uniformly
             at random and percepts are generated.
 
@@ -379,10 +381,10 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """ Resets the agent and clears the context tree.
         """
 
-        # Reset the context tree.
+        # Clears the context tree.
         self.context_tree.clear()
 
-        # Reset the basic agent details.
+        # Resets the basic agent details: age, total_reward, last_update.
         agent.Agent.reset(self)
     # end def
 
@@ -391,7 +393,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             (predictive UCT).
         """
 
-        # Use rhoUCT to search for the next action.
+        # Use ρUCT to search for the next action.
 
         # TODO: implement
 
