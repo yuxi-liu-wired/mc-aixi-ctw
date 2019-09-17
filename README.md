@@ -8,12 +8,12 @@ A skeletal implementation, taken from [gkassel/pyaixi](https://github.com/gkasse
 
 This is a group project during Australian National University, 2019 Semester 2.
 
--   Andrew Tanggara
--   Yan Yang
--   Jiayan Liu
--   Changle Ye
--   Wenxi Wu
--   Yuxi Liu
+-   Andrew Tanggara: agent
+-   Yuxi Liu: agent
+-   Yan Yang: CTW
+-   Jiayan Liu: CTW
+-   Changle Ye: environment
+-   Wenxi Wu: environment
 
 #### File structure
 
