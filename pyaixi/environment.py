@@ -13,48 +13,52 @@ from pyaixi import util
 
 class Environment:
     """ Base class for the various agent environments.
-
         Each individual environment should inherit from this class and implement the appropriate methods.
 
         In particular, the constructor should set up the environment as appropriate, including
-        setting the initial observation and reward, as well as setting appropriate
-        values for the configuration options:
+         - initial observation
+         - initial reward
+        as well as setting appropriate values for the configuration options:
          - `agent-actions`
          - `observation-bits`
          - `reward-bits`
 
-        Following this, the agent and environment interact in a cyclic fashion. The
-        agent receives the observation and reward using `Environment.getObservation`
-        and `Environment.getReward` before supplying the environment with an action
-        via `Environment.performAction`.
+        Following this, the agent and the environment interact in a cyclic fashion.
+        In each cycle, the agent does three things:
+         - receives the observation using `Environment.getObservation`
+         - receives the reward using `Environment.getReward`
+         - sending an action to the environment using `Environment.performAction`.
 
-        Upon receiving an action, the environment updates the observation and reward.
+        Upon receiving an action, the environment updates:
+         - observation
+         - reward
+
         At the beginning of each cycle, the value of `Environment::isFinished` is checked.
-
-        If it is true then there is no more interaction between the agent and environment,
-        and the program exits. Otherwise the interaction continues indefinitely.
+        If true, then there is no more interaction between the agent and environment,
+        and the program exits. This can be thought of as the death of the agent.
+        Otherwise the interaction continues.
     """
 
     def __init__(self, options = {}):
-        """ Construct an agent environment.
+        """ Constructs an agent environment.
         """
-
-        # Set the current action to null/None.
-        self.action = None
 
         # Set whether the environment is finished.
         self.is_finished = False
 
-        # Set the current observation to null/None.
-        self.observation = None
-
         # Store the given options.
         self.options = options
+
+        # Set the current action to null/None.
+        self.action = None
+
+        # Set the current observation to null/None.
+        self.observation = None
 
         # Set the current reward to null/None.
         self.reward = None
 
-        # Defines the acceptable action values.
+        # Define the acceptable action values.
         self.valid_actions = []
 
         # Define the acceptable observation values.
@@ -71,7 +75,7 @@ class Environment:
                str(self.observation) + ", reward = " + str(self.reward)
     # end def
 
-    # Make a compatible string function for the current Python version.
+    # Makes a compatible string function for the current Python version.
     if sys.version_info[0] >= 3:
         # For Python 3.
         def __str__(self):
@@ -82,15 +86,6 @@ class Environment:
         def __str__(self):
             return self.__unicode__().encode('utf8')
         # end def
-    # end def
-
-    def action_bits(self):
-        """ Returns the maximum number of bits required to represent an action.
-        """
-
-        # TODO: implement
-
-        return None
     # end def
 
     def is_valid_action(self, action):
@@ -162,6 +157,15 @@ class Environment:
         return None
     # end def
 
+    def action_bits(self):
+        """ Returns the maximum number of bits required to represent an action.
+        """
+
+        # TODO: implement
+
+        return None
+    # end def
+
     def observation_bits(self):
         """ Returns the maximum number of bits required to represent an observation.
         """
@@ -174,6 +178,15 @@ class Environment:
     def percept_bits(self):
         """ Returns the maximum number of bits required to represent a percept.
         """
+        # TODO: implement
+
+        return None
+    # end def
+
+    def reward_bits(self):
+        """ Returns the maximum number of bits required to represent a reward.
+        """
+
         # TODO: implement
 
         return None
@@ -192,12 +205,4 @@ class Environment:
         return None
     # end def
 
-    def reward_bits(self):
-        """ Returns the maximum number of bits required to represent a reward.
-        """
-
-        # TODO: implement
-
-        return None
-    # end def
 # end class
