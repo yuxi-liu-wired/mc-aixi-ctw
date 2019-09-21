@@ -230,9 +230,10 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """ Returns an action, distributed according to the agent's history
             statistics, by sampling from the context tree.
         """
-
+        
         # TODO: implement
-        return None
+        action = self.context_tree.generate_random_symbols()
+        return self.decode_action(action)
     # end def
 
     def generate_percept(self):
@@ -241,8 +242,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-
-        return None
+        percept = self.context_tree.generate_random_symbols()
+        return self.decode_percept(percept)
     # end def
 
     def generate_percept_and_update(self):
@@ -251,7 +252,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-        return None
+        percept = self.context_tree.generate_random_symbols()
+        self.context_tree.update(percept)
+        return self.decode_percept(percept)
     # end def
 
     def get_predicted_action_probability(self, action):
@@ -261,7 +264,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `action`: the action we wish to find the likelihood of.
         """
         # TODO: implement
-
+        
         return None
     # end def
 
