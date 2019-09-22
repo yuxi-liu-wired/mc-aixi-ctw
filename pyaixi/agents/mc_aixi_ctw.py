@@ -25,7 +25,7 @@ from pyaixi import agent, prediction, search, util
 
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
-from pyaixi.search import monte_carlo_search_tree
+from pyaixi.search.monte_carlo_search_tree import MonteCarloSearchNode
 
 
 class MC_AIXI_CTW_Undo:
@@ -106,7 +106,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     def __init__(self, environment = None, options = {}):
         """ Construct a MC-AIXI-CTW learning agent from the given configuration values and the environment.
 
-             - `environment` is an instance of the pyaixi.Environment class that the agent with interact with.
+             - `environment` is an instance of the pyaixi.Environment class that the agent interact with.
              - `options` is a dictionary of named options and their values.
 
             `options` must contain the following mandatory options:
@@ -237,7 +237,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         action_bit_count = self.environment.action_bits()
         action_bits = self.context_tree.generate_random_symbols(action_bit_count)
-        return decode_action(action_bits)
+        return self.decode_action(action_bits)
     # end def
 
     def generate_percept(self):
@@ -247,9 +247,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         assert self.last_update == action_update,  "Can only generate a percept after an action update."
 
-        perception_bit_count = self.environment.perception_bits()
+        perception_bit_count = self.environment.percept_bits()
         perception_bits = self.context_tree.generate_random_symbols(perception_bit_count)
-        return decode_percept(perception_bits)
+        return self.decode_percept(perception_bits)
     # end def
 
     def generate_percept_and_update(self):
@@ -425,7 +425,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # Use ρUCT to search for the next action.
-        mcts_planning(self, self.horizon, self.mc_simulations)
+        best_action = MonteCarloSearchNode.mcts_planning(self, self.horizon, self.mc_simulations)
         return best_action
     # end def
 # end class

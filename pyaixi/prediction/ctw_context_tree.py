@@ -159,13 +159,7 @@ class CTWContextTreeNode:
         
         if self.symbol_count[symbol] > 0:
             self.symbol_count[symbol]-=1
-            
-        child = self.children.get(symbol,None)
-        
-        if child and not child.visits():
-            del self.children[symbol]
-            self.tree.tree_size -= 1
-            
+                        
         self.log_kt -= self.log_kt_multiplier(symbol)
         self.update_log_probability()
     # end def
@@ -333,7 +327,8 @@ class CTWContextTree:
 
             - `symbol_count`: the number of symbols to generate.
         """
-        symbol_list = self.generate_random_symbols_and_update(symbol_list, symbol_count)
+#        symbol_list = self.generate_random_symbols_and_update(symbol_list, symbol_count)
+        symbol_list = self.generate_random_symbols_and_update(symbol_count)
         self.revert(symbol_count)
 
         return symbol_list
@@ -351,8 +346,8 @@ class CTWContextTree:
         sample =""
         
         for index in range(symbol_count):
-            bit = 1 if self.predict(1) >= 0.5 else 0
-            sample+=bit
+            bit = 1 if self.predict(1) >= random.random() else 0
+            sample+= str(bit)
             self.update([bit])
         
         return list(sample)
@@ -410,7 +405,8 @@ class CTWContextTree:
             
             for node in reversed(self.context):
                 node.revert(bit)
-       
+                
+        self.tree_size = self.root.size()
     # end def
 
     def revert_history(self, symbol_count = 1):
@@ -451,7 +447,8 @@ class CTWContextTree:
             bit = int(bit)
             
             #cannot update context if the history is too short
-            #As the depth is represents k-th order Markov model
+            #As the depth is represents (k-1)th order Markov model
+            #leaf node always stay in symbol count {0:0,1:0}
             #Thus, at least's len(k) history in the context
             if len(self.history) < self.depth:
                 self.update_history(bit)
@@ -459,11 +456,7 @@ class CTWContextTree:
             
             self.update_context()
             
-            #for the sake of convenience
-            #leafs will always stay in symbol_count(0,0)
-            #if we update leafs, it will become (k+1)th mxiture Markov model
-            
-            for node in reversed(self.context[:-1]):
+            for node in reversed(self.context):
                 node.update(bit)
                 
             self.update_history(bit)
@@ -513,9 +506,13 @@ class CTWContextTree:
                 context[-1] = last_node
                 context.append(context[-1].children[index])
                 last_node = node
-                
-        self.context = context
         
+        #for the sake of convenience
+        #leafs will always stay in symbol_count(0,0)
+        #if we update leafs, it will become kth mixture Markov model
+            
+        self.context = context[:-1]
+        self.tree_size = self.root.size()
     # end def
 
     def update_history(self, symbol_list):

@@ -163,7 +163,7 @@ class Environment:
 
         # TODO: implement
 
-        return None
+        return util.bits_required(self.action)
     # end def
 
     def observation_bits(self):
@@ -171,16 +171,16 @@ class Environment:
         """
 
         # TODO: implement
-
-        return None
+        
+        return util.bits_required(self.observation)
     # end def
 
     def percept_bits(self):
         """ Returns the maximum number of bits required to represent a percept.
         """
         # TODO: implement
-
-        return None
+        
+        return self.observation_bits()+self.reward_bits()
     # end def
 
     def reward_bits(self):
@@ -189,7 +189,7 @@ class Environment:
 
         # TODO: implement
 
-        return None
+        return util.bits_required(self.reward)
     # end def
 
     def perform_action(self, action):
