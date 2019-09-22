@@ -21,7 +21,7 @@ sys.path.insert(0, PROJECT_ROOT)
 # Ensure xrange is defined on Python 3.
 from six.moves import xrange
 
-from pyaixi import agent, prediction, search, util
+from pyaixi import agent, prediction, util
 
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree

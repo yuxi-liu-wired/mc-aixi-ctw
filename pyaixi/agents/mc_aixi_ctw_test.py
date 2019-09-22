@@ -1,5 +1,5 @@
 
-from pyaixi import agent, prediction, search, util, environment, environments
+#from pyaixi import agent, prediction, search, util, environment, environments
 from mc_aixi_ctw import MC_AIXI_CTW_Agent
 from pyaixi.environment import Environment
 from pyaixi.environments.coin_flip import CoinFlip
@@ -16,5 +16,11 @@ options = {'agent-horizon': m,
            'mc-simulations': s}
 
 aixi = MC_AIXI_CTW_Agent(env, options)
-aixi.generate_percept()
+#percept = aixi.generate_percept()
 
+#initial percept always (0,0)
+def test_answer():
+    with pytest.raises(ValueError, match=(0,0)):
+        aixi.generate_percept()
+
+test_answer()
