@@ -131,12 +131,24 @@ class Agent:
     # end def
 
     def minimum_reward(self):
-        """ Returns the nimimum possible reward the agent can receive in a single cycle.
+        """ Returns the minimum possible reward the agent can receive in a single cycle.
         """
 
         # Get the value from the environment.
         if self.environment is not None:
             return self.environment.minimum_reward()
+        else:
+            return None
+        # end if
+    # end def
+
+    def range_of_reward(self):
+        """ Returns the range of possible reward the agent can receive in a single cycle.
+        """
+
+        # Get the value from the environment.
+        if self.environment is not None:
+            return self.environment.maximum_reward() - self.environment.minimum_reward()
         else:
             return None
         # end if

@@ -104,7 +104,7 @@ class MonteCarloSearchNode:
         Returns the accumulated reward below this node.
 
             - `agent`: the agent doing the sampling
-            - `horizon`: how many cycles into the future to sample
+            - `horizon`: how many steps into the future to sample
         """
 
         reward_sum = 0.0
@@ -130,7 +130,6 @@ class MonteCarloSearchNode:
 
         elif self.visits == 0:
             reward_sum = agent.playout(horizon)
-            # playout already would restore the agent.
 
         else:
             action = select_action(self, agent, horizon)
@@ -146,35 +145,50 @@ class MonteCarloSearchNode:
     # end def
 
     def sample_iterations(self, agent, horizon, iterations):
+        """ Performs sampling for many iterations at this node.
+
+            - `agent`: the agent doing the sampling
+            - `horizon`: how many steps into the future to sample
+            - `iterations`: how many iterations to perform
+        """
+
         for i in range(iterations):
-            sample(self, agent, horizon)
+            self.sample(agent, horizon)
     # end def
 
     def select_action(self, agent, horizon):
         """ Returns an action selected according to UCB policy.
 
              - `agent`: the agent which is doing the sampling.
+             - `horizon`: how many steps into the future to sample
         """
+
         assert self.type == decision_node
 
-        visited_children = self.children.key
-        all_children = agent.generate_all_actions()
-        unvisited_children = list(set(all_children) - set(visited_children))
+        tried_actions = self.children.key
+        all_actions = agent.generate_all_actions()
+        untried_actions = list(set(all_actions) - set(tried_actions))
 
-        if unvisited_children:  # If there are unvisited children
-            action = random.choice(unvisited_children)
-            self.children[action] = MonteCarloSearchNode(chance_node)
-            return action
+        if untried_actions:  # If there are untried actions
+            action = random.choice(untried_actions) # choose a random untried action
+            self.children[action] = MonteCarloSearchNode(chance_node) # add it as a new MCTS node
+            return action # return this action
+        # end if
 
-        assert len(unvisited_children) == 0, "All children should have been visited."
+        assert len(untried_actions) == 0, "All children should have been visited."
 
-        children_ucb_dict = {}  # {node: UCD score} dictionary
-        range = agent.maximum_reward() - agent.minimum_reward()
-        for action in action_list:
+        # No untried actions. Use UCB to find the best action.
+        action_ucb = {}
+        range = agent.range_of_reward()
+        for action in all_actions:
             child = self.children[action]
-            children_ucb_dict[action] = (child.value / (horizon * range)
+            # NOTE: Still not sure if it should divide by (horizon * range)
+            action_ucb[action] = (child.value / range
                 + exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
-        best_action = max(children_ucb_dict, key=children_ucb_dict.get)
+        # end for
+
+        # now pick the action with the highest UCD score.
+        best_action = max(action_ucb, key=action_ucb.get)
         return best_action
     # end def
 
@@ -182,6 +196,13 @@ class MonteCarloSearchNode:
 
 
 def mcts_planning(agent, horizon, iterations):
+    """ Run the ρUCT planning algorithm for a given number of iterations with a
+        given horizon distance, and return the best action found.
+
+        - `agent`: the agent doing the sampling
+        - `horizon`: how many cycles into the future to sample
+        - `iterations`: how many samples to take
+    """
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
     return mc_tree.select_action(agent, horizon)
