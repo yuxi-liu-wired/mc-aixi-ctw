@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Defines classes to implement context trees according to the Context Tree Weighting algorithm.
+Define classes to implement context trees according to the Context Tree Weighting algorithm.
 """
 
 from __future__ import division
@@ -32,7 +32,7 @@ class CTWContextTreeNode:
         Then the weighted block probability of observing `h_n` at node `n` is given by
 
           P_w^n(h_n) :=
-
+  
             Pr_kt(h_n)                        (if n is a leaf node)
             1/2 Pr_kt(h_n) +
             1/2 P_w^n0(h_n0) P_w^n1(h_n1)     (otherwise)
@@ -137,8 +137,13 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
-
-        return None
+        
+        a = self.symbol_count[0]
+        b = self.symbol_count[1]
+        numerator  = b if symbol else a
+        log_Pr_kt = math.log((numerator + 0.5)/(a + b + 1))
+        
+        return log_Pr_kt
     # end def
 
     def revert(self, symbol):
@@ -150,6 +155,19 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        symbol = int(symbol)
+        
+        if self.symbol_count[symbol] > 0:
+            self.symbol_count[symbol]-=1
+            
+        child = self.children.get(symbol,None)
+        
+        if child and not child.visits():
+            del self.children[symbol]
+            self.tree.tree_size -= 1
+            
+        self.log_kt -= self.log_kt_multiplier(symbol)
+        self.update_log_probability()
     # end def
 
     def size(self):
@@ -168,6 +186,14 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        
+        # The log turns the multiple to plus, and our appraoch is down to top
+        symbol = int(symbol)
+        self.log_kt+=self.log_kt_multiplier(symbol)
+        
+        self.update_log_probability()
+        
+        self.symbol_count[symbol]+=1
     # end def
 
     def update_log_probability(self):
@@ -180,7 +206,7 @@ class CTWContextTreeNode:
                   log(1/2 Pr_kt(h_n)) + 1/2 P^n0_w x P^n1_w)
                                             (otherwise)
             and stores the value in log_probability.
-
+     
             Because of numerical issues, the implementation works directly with the
             log probabilities `log(Pr_kt(h_n)`, `log(P^n0_w)`,
             and `log(P^n1_w)` rather than the normal probabilities.
@@ -206,6 +232,16 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        if self.is_leaf_node():
+            self.log_probability = self.log_kt
+            
+        else:
+            children = sum([subnode.log_probability for _,subnode in self.children.items()])
+            # a>b -> smallest exp(log(b) - log(a))
+            a,b = sorted([self.log_kt,children],reverse = True)
+            self.log_probability = log_half + a + math.log(1 + math.exp(b-a))
+                
+    
     # end def
 
     def visits(self):
@@ -312,8 +348,14 @@ class CTWContextTree:
         """
 
         # TODO: implement
-
-        return None
+        sample =""
+        
+        for index in range(symbol_count):
+            bit = 1 if self.predict(1) >= 0.5 else 0
+            sample+=bit
+            self.update([bit])
+        
+        return list(sample)
     # end def
 
     def predict(self, symbol_list):
@@ -331,17 +373,44 @@ class CTWContextTree:
         """
 
         # TODO: implement
-
-        return None
+        if isinstance(symbol_list,int):
+            symbol_list = [symbol_list]
+        else:
+            symbol_list = list(symbol_list)
+                               
+        # As we are doing depth-context tree, then calculate log uniform probability 
+        if len(symbol_list) + len(self.history)  < self.depth:
+            return math.log(math.pow(0.5,len(symbol_list)))
+        
+        h  = self.root.log_probability
+        self.update(symbol_list)
+        hy = self.root.log_probability
+        self.revert(len(symbol_list))
+        
+        # log a - log b = log (a/b)
+        # exp**(log a - log b) = a/b
+        #  transfer the log back
+        p = math.exp(hy - h)
+        return p
     # end def
 
     def revert(self, symbol_count = 1):
         """ Restores the context tree to its state prior to a specified number of updates.
-
+     
             - `num_symbols`: the number of updates (symbols) to revert. (Default of 1.)
         """
-
         # TODO: implement
+         
+        for step in range(symbol_count):
+            
+            bit = self.history[-1]
+            self.history = self.history[:-1]
+            
+            self.update_context()
+            
+            for node in reversed(self.context):
+                node.revert(bit)
+       
     # end def
 
     def revert_history(self, symbol_count = 1):
@@ -373,6 +442,33 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        if isinstance(symbol_list,int):
+            symbol_list = [symbol_list]
+        else:
+            symbol_list = list(symbol_list)
+        
+        for bit in symbol_list:
+            bit = int(bit)
+            
+            #cannot update context if the history is too short
+            #As the depth is represents k-th order Markov model
+            #Thus, at least's len(k) history in the context
+            if len(self.history) < self.depth:
+                self.update_history(bit)
+                continue
+            
+            self.update_context()
+            
+            #for the sake of convenience
+            #leafs will always stay in symbol_count(0,0)
+            #if we update leafs, it will become (k+1)th mxiture Markov model
+            
+            for node in reversed(self.context[:-1]):
+                node.update(bit)
+                
+            self.update_history(bit)
+        
+            
     # end def
 
     def update_context(self):
@@ -386,6 +482,40 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        
+        '''
+        R for root, C for Children , b for new bit
+        eg: depth 3, history 110001b
+                                CCR 
+                                
+        b is the context of 1, 01, 001,
+        as context is considered from tree leaf to node
+        By default, leafs will always stay in symbol_count(0,0)
+        
+        '''
+        
+        context = [self.root]
+        last_node = self.root
+        for bit in reversed(self.history[-self.depth:]):
+            # if value is 1, go left branch, otherwise right branch
+            
+            index = 1 if bit else 0
+            
+                
+            if index in context[-1].children:
+                context.append(context[-1].children[index])
+                last_node = context[-1]
+                
+            else:
+                node =CTWContextTreeNode(self)
+                last_node.children[index] = node
+                #update last node in the context list, as we create new child.
+                context[-1] = last_node
+                context.append(context[-1].children[index])
+                last_node = node
+                
+        self.context = context
+        
     # end def
 
     def update_history(self, symbol_list):
