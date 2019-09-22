@@ -179,11 +179,11 @@ class MonteCarloSearchNode:
 
         # No untried actions. Use UCB to find the best action.
         action_ucb = {}
-        range = agent.range_of_reward()
+        reward_range = agent.range_of_reward()
         for action in all_actions:
             child = self.children[action]
-            # NOTE: Still not sure if it should divide by (horizon * range)
-            action_ucb[action] = (child.value / range
+            # NOTE: Still not sure if it should divide by (horizon * reward_range)
+            action_ucb[action] = (child.value / reward_range
                 + exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
         # end for
 
