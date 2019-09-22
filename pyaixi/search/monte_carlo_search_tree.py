@@ -107,34 +107,42 @@ class MonteCarloSearchNode:
             - `horizon`: how many cycles into the future to sample
         """
 
-        reward = 0.0
+        reward_sum = 0.0
+        agent.set_savestate()
+
         if horizon == 0:
             assert self.type == decision_node
             return 0.0
 
         elif self.type == chance_node:
             # sample or from ρ(or|h)
-            observation, reward =  # TODO: sample or from ρ(or|h)
+            observation, reward = agent.generate_percept_and_update()
+
             # create node hor if it is an unvisited child.
             if not (observation in self.children):
                 self.children[observation] = MonteCarloSearchNode(decision_node)
-            updated_agent =  # TODO: update the agent so that it has received this observation.
-            reward = r + sample(self, updated_agent, horizon - 1)
-            # TODO: revert the agent
+            # end if
+
+            child = self.children[observation]
+            # TODO: decide if it should be (observation, reward)
+            # Algorithm 2 of [Veness, 2011].
+            reward_sum = reward + sample(child, agent, horizon - 1)
 
         elif self.visits == 0:
-            reward = agent.playout(horizon)
-            # TODO: revert the agent
+            reward_sum = agent.playout(horizon)
+            # playout already would restore the agent.
 
         else:
             action = select_action(self, agent, horizon)
-            reward = sample(self, update_agent, horizon)
-            # TODO: revert the agent
+            agent.model_update_action(action)
+            reward_sum = sample(self, agent, horizon)
         # end if
 
-        self.mean = (reward + self.mean * self.visits)/(self.visits + 1)
+        agent.restore_savestate()
+
+        self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
         self.visits++
-        return reward
+        return reward_sum
     # end def
 
     def sample_iterations(self, agent, horizon, iterations):
@@ -149,22 +157,22 @@ class MonteCarloSearchNode:
         """
         assert self.type == decision_node
 
-        unvisited_children =  # TODO
+        visited_children = self.children.key
+        all_children = agent.generate_all_actions()
+        unvisited_children = list(set(all_children) - set(visited_children))
+
         if unvisited_children:  # If there are unvisited children
-            action = unvisited_children[0]  # consider random choice?
+            action = random.choice(unvisited_children)
             self.children[action] = MonteCarloSearchNode(chance_node)
             return action
 
         assert len(unvisited_children) == 0, "All children should have been visited."
 
-        action_list =  # TODO: get the list of actions available from this position
-        assert len(action_list) > 0, "No action available."
-        children_ucb_dict = {}  # node -> UCD score
+        children_ucb_dict = {}  # {node: UCD score} dictionary
         range = agent.maximum_reward() - agent.minimum_reward()
         for action in action_list:
             child = self.children[action]
-            # children_ucb_dict[action] = (child.value / (horizon * range) # TODO: decide whether it's useful to add horizon
-            children_ucb_dict[action] = (child.value / range
+            children_ucb_dict[action] = (child.value / (horizon * range)
                 + exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
         best_action = max(children_ucb_dict, key=children_ucb_dict.get)
         return best_action
