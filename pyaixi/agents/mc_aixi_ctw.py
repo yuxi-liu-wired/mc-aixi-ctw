@@ -250,9 +250,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         assert self.last_update == action_update,  "Can only generate a percept after an action update."
 
-        perception_bit_count = self.environment.percept_bits()
-        perception_bits = self.context_tree.generate_random_symbols(perception_bit_count)
-        return self.decode_percept(perception_bits)
+        percept_bit_count = self.environment.percept_bits()
+        percept_bits = self.context_tree.generate_random_symbols(percept_bit_count)
+        return self.decode_percept(percept_bits)
     # end def
 
     def generate_percept_and_update(self):
