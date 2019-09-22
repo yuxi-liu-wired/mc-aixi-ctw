@@ -93,11 +93,17 @@ class Agent:
         # end if
     # end def
 
+    def generate_all_actions(self):
+        """ Returns the list of all possible actions at this stage.
+        """
+
+        return self.environment.valid_actions
+
     def generate_random_action(self):
         """ Returns an action generated uniformly at random.
         """
 
-        return util.choice(self.environment.valid_actions)
+        return util.choice(self.generate_all_actions())
     # end def
 
     def maximum_action(self):
@@ -125,12 +131,24 @@ class Agent:
     # end def
 
     def minimum_reward(self):
-        """ Returns the nimimum possible reward the agent can receive in a single cycle.
+        """ Returns the minimum possible reward the agent can receive in a single cycle.
         """
 
         # Get the value from the environment.
         if self.environment is not None:
             return self.environment.minimum_reward()
+        else:
+            return None
+        # end if
+    # end def
+
+    def range_of_reward(self):
+        """ Returns the range of possible reward the agent can receive in a single cycle.
+        """
+
+        # Get the value from the environment.
+        if self.environment is not None:
+            return self.environment.maximum_reward() - self.environment.minimum_reward()
         else:
             return None
         # end if

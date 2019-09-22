@@ -135,12 +135,14 @@ class MonteCarloSearchNode:
             action = self.select_action(self, agent, horizon)
             agent.model_update_action(action)
             reward_sum = self.sample(self, agent, horizon)
+
         # end if
 
         agent.restore_savestate()
 
         self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
         self.visits = self.visits + 1
+
         return reward_sum
     # end def
 
@@ -185,6 +187,7 @@ class MonteCarloSearchNode:
             # NOTE: Still not sure if it should divide by (horizon * reward_range)
             action_ucb[action] = (child.value / reward_range
                 + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
+
         # end for
 
         # now pick the action with the highest UCD score.

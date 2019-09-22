@@ -146,6 +146,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.mc_simulations = int(options['mc-simulations'])
 
         self.reset()
+
+        # Saves a state of the agent that allows restoring the savestate.
+        self.savestate = MC_AIXI_CTW_Undo(self)
     # end def
 
     ## Decoders and encoders.
@@ -247,9 +250,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         assert self.last_update == action_update,  "Can only generate a percept after an action update."
 
-        perception_bit_count = self.environment.percept_bits()
-        perception_bits = self.context_tree.generate_random_symbols(perception_bit_count)
-        return self.decode_percept(perception_bits)
+        percept_bit_count = self.environment.percept_bits()
+        percept_bits = self.context_tree.generate_random_symbols(percept_bit_count)
+        return self.decode_percept(percept_bits)
     # end def
 
     def generate_percept_and_update(self):
@@ -266,6 +269,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return observation, reward
     # end def
 
+    ## Inquire its model for probability of future.
+    # TODO: what is this for?
     def action_probability(self, action):
         """ Returns the probability of selecting a particular action according to the
             agent's internal model of its own behaviour.
@@ -276,6 +281,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return self.context_tree.predict(self.encode_action(action))
     # end def
 
+    # TODO: what is this for?
     def percept_probability(self, observation, reward):
         """ Returns the probability of receiving percept (observation, reward),
             according to the agent's environment model.
@@ -303,6 +309,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return max(self.environment.action_bits(), self.environment.percept_bits())
     # end def
 
+    ## For saving and loading the agent state.
     def model_revert(self, undo_instance):
         """ Revert the agent's internal environment model to that of a previous time cycle,
             using the given undo class instance.
@@ -316,6 +323,16 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         current_history_size = self.history_size()
         if current_history_size > old_history_size:
             self.context_tree.revert(current_history_size - old_history_size)
+    # end def
+
+    def set_savestate(self):
+        """ Sets a savestate that can later be restored.
+        """
+        self.savestate = MC_AIXI_CTW_Undo(self)
+    # end def
+
+    def restore_savestate(self):
+        self.model_revert(self.savestate)
     # end def
 
     def model_size(self):
@@ -392,7 +409,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         reward_sum = 0.0
-        undo_instance = MC_AIXI_CTW_Undo(self)
+        self.set_savestate()
 
         for i in range(horizon):
             if self.environment.is_finished:
@@ -404,7 +421,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             reward_sum += reward
         # end for
 
-        self.model_revert(undo_instance)
+        self.restore_savestate()
         return reward_sum
     # end def
 
