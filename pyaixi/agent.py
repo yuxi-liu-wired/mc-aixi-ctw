@@ -93,11 +93,17 @@ class Agent:
         # end if
     # end def
 
+    def generate_all_actions(self):
+        """ Returns the list of all possible actions at this stage.
+        """
+
+        return self.environment.valid_actions
+
     def generate_random_action(self):
         """ Returns an action generated uniformly at random.
         """
 
-        return util.choice(self.environment.valid_actions)
+        return util.choice(self.generate_all_actions())
     # end def
 
     def maximum_action(self):
