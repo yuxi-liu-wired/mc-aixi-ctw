@@ -171,7 +171,7 @@ class Environment:
         """
 
         # TODO: implement
-        print("current action: "+str(self.action))
+#        print("---=== current action: "+str(self.action))
         return util.bits_required(self.action)
     # end def
 
