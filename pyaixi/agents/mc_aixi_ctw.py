@@ -364,6 +364,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update other properties.
         self.age += 1
         self.last_update = action_update
+        
     # end def
 
     def model_update_percept(self, observation, reward):
@@ -373,7 +374,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `observation`: the observation that was received.
             - `reward`: the reward that was received.
         """
-
+        
         # The last update must have been an action, else this percept update is invalid.
         assert self.last_update == action_update, "Can only perform a percept update after an action update."
 
@@ -394,6 +395,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update other properties.
         self.total_reward += reward
         self.last_update = percept_update
+        
     # end def
 
     def playout(self, horizon):
