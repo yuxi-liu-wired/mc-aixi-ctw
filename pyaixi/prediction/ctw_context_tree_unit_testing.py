@@ -165,6 +165,12 @@ class TestCTWContextTree(unittest.TestCase):
         self.assertEqual(a,ground_truth_a,"incorrect update")
         self.assertEqual(b,ground_truth_b,"incorrect update")
         
+    def test_predict(self):
+        tree = CTWContextTree(3)
+        tree.update("110")
+        p = tree.predict("0100110")  
+        self.assertAlmostEquals(7/2048,p,8,"prediction wrong")
+        
         
         
 
