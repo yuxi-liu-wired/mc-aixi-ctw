@@ -186,7 +186,7 @@ class Environment:
         """ Returns the maximum number of bits required to represent a percept.
         """
         # TODO: implement
-        # need to add number of bits needed for a prefix encoding to separate observation aprt and reward part???
+        # need to add number of bits needed for a prefix encoding to separate observation aprt and reward part??? no, because we know the 
         return self.observation_bits()+self.reward_bits()
     # end def
 

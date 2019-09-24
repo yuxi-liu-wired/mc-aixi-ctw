@@ -111,10 +111,12 @@ class MonteCarloSearchNode:
         agent.set_savestate()
 
         if horizon == 0:
+            print("reached horizon")
             assert self.type == decision_node
             return 0.0
 
         elif self.type == chance_node:
+            print("sample percept")
             # sample or from ρ(or|h)
             observation, reward = agent.generate_percept_and_update()
 
@@ -129,12 +131,14 @@ class MonteCarloSearchNode:
             reward_sum = reward + self.sample(child, agent, horizon - 1)
 
         elif self.visits == 0:
+            print("havent visited node before")
             reward_sum = agent.playout(horizon)
 
         else:
-            action = self.select_action(self, agent, horizon)
+            print("select action")
+            action = self.select_action(agent, horizon)
             agent.model_update_action(action)
-            reward_sum = self.sample(self, agent, horizon)
+            reward_sum = self.sample(agent, horizon)
 
         # end if
 
@@ -167,7 +171,7 @@ class MonteCarloSearchNode:
 
         assert self.type == decision_node
 
-        tried_actions = self.children.key
+        tried_actions = self.children.keys()
         all_actions = agent.generate_all_actions()
         untried_actions = list(set(all_actions) - set(tried_actions))
 

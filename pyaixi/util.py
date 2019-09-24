@@ -88,8 +88,9 @@ def encode(integer_symbol, bit_count):
                (bit_count, bits_length)
 
     # Calculate how many bits we need to pad the bit string with, if any, and pad with zeros.
-    pad_list = [0 for i in xrange(0, bits_length - bit_count)]
-
+    pad_list = [0 for i in xrange(0, bit_count - bits_length)]
+    print(bits_length - bit_count)
+    print("pad: "+str(pad_list))
     # Return the newly created bit list, with the zero padding first.
     symbol_list = pad_list + bits
     return symbol_list
