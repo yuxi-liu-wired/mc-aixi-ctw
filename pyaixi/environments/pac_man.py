@@ -20,10 +20,10 @@ layout_txt = "pacMan.txt"
 pacman_action_enum = util.enum('top', 'down', 'left', 'right')
 
 direction = {
-        'top':[1,0],
-        'down':[-1,0],
-        'left':[0,-1],
-        'right':[0,1]
+        '0':[1,0], #top
+        '1':[-1,0], #down
+        '2':[0,-1], # left
+        '3':[0,1] #right
               }
 
 direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
@@ -40,10 +40,11 @@ class PacMan(environment.Environment):
         * stands for pellets
         
         '''
-        
-        self.layout = self.load(layout_txt)
         self.rows = 0
         self.cols = 0
+        self.maximum_reward = 0
+        self.maximum_observation = 0
+        self.layout = self.load(layout_txt)
         self.monster = dict()
         self.power_pill = []
         self.pacman = None
@@ -52,14 +53,21 @@ class PacMan(environment.Environment):
         self.isalive = True
         self.super_pacman = False
         self.super_pacman_time = 0
+        
+        self.valid_rewards = range(self.maximum_reward)
+        self.valid_actions = list(pacman_action_enum.keys())
+        self.valid_observations = range(self.maximum_observation)
      
     def random_pellets(self,x):
         
         if x == ' ' and default_probability > random.random():
             
+            self.maximum_reward += 1
+            
             return "*"
         
         else:
+            
             return x
         
     def load(self,layout):
@@ -107,9 +115,13 @@ class PacMan(environment.Environment):
             
             x,y = positon
             self.layout[x][y] = " "
+            
+        self.maximum_reward = self.maximum_reward * 10 + len(self.power_pill) * 100 * 30
+            
                           
     def perform_action(self, action):
         
+        self.action = action
         
         self.reward -= 1
         
@@ -175,6 +187,14 @@ class PacMan(environment.Environment):
             
             self.super_pacman = False
             
+        self.reward = max(self.reward,0)
+        self.observation = self.calculate_observation()
+        
+        return self.reward, self.observation
+    
+    def calculate_observation(self):
+        
+        pass
         
     def movement_monster(self):
         
@@ -257,27 +277,31 @@ class PacMan(environment.Environment):
             print("==" * 20)
             print(f"Reward :{self.reward}")
             
-            action = input()
+            action = input("Action is :  ")
             
             if action == "w":
             
-                action = "down"
+                action = "1" #down
                 
             elif action == "s":
             
-                action  = "top"
+                action  = "0" #top
                 
             elif action == "a":
             
-                action = "left"
+                action = "2" #left
                 
             else:
                     
-                action = "right"
+                action = "3" #right
                     
             self.perform_action(action)
             self.movement_monster()
-                    
+            
+            
+        print("**"*20)
+        print('{:^40}'.format("Game Over"))
+        print("**"*20)          
                 
                         
                     
