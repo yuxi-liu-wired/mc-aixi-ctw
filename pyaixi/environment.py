@@ -172,7 +172,7 @@ class Environment:
 
         # TODO: implement
         
-        actions = [len(util.bits_required(action)) for action in self.valid_actions]
+        actions = [util.bits_required(action) for action in self.valid_actions]
         
         return max(actions)
     # end def
@@ -182,7 +182,7 @@ class Environment:
         """
 
         # TODO: implement
-        observations = [len(util.bits_required(obs)) for obs in self.valid_observations]
+        observations = [util.bits_required(obs) for obs in self.valid_observations]
         
         return max(observations)
     # end def
