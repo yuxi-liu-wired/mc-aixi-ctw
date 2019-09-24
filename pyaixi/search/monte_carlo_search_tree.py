@@ -125,21 +125,23 @@ class MonteCarloSearchNode:
 
             child = self.children[observation]
             # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
-            reward_sum = reward + sample(child, agent, horizon - 1)
+            reward_sum = reward + self.sample(child, agent, horizon - 1)
 
         elif self.visits == 0:
             reward_sum = agent.playout(horizon)
 
         else:
-            action = select_action(self, agent, horizon)
+            action = self.select_action(self, agent, horizon)
             agent.model_update_action(action)
-            reward_sum = sample(self, agent, horizon)
+            reward_sum = self.sample(self, agent, horizon)
+
         # end if
 
         agent.restore_savestate()
 
         self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
-        self.visits++
+        self.visits = self.visits + 1
+
         return reward_sum
     # end def
 
@@ -182,7 +184,7 @@ class MonteCarloSearchNode:
         for action in all_actions:
             child = self.children[action]
             action_ucb[action] = (child.value / (horizon * reward_range)
-                + exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
+                + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
         # end for
 
         # now pick the action with the highest UCD score.

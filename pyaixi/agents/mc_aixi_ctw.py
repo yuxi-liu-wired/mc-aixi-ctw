@@ -21,11 +21,11 @@ sys.path.insert(0, PROJECT_ROOT)
 # Ensure xrange is defined on Python 3.
 from six.moves import xrange
 
-from pyaixi import agent, prediction, search, util
+from pyaixi import agent, prediction, util
 
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
-from pyaixi.search.monte_carlo_search_tree import MonteCarloSearchNode
+from pyaixi.search.monte_carlo_search_tree import MonteCarloSearchNode, mcts_planning
 
 
 class MC_AIXI_CTW_Undo:
@@ -354,6 +354,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         assert self.last_update == percept_update, "Can only perform an action update after a percept update."
 
         # Update the agent's internal environment model after performing an action.
+        self.environment.perform_action(action)
 
         # Get the symbols that represent this action.
         action_symbols = self.encode_action(action)
@@ -373,7 +374,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `observation`: the observation that was received.
             - `reward`: the reward that was received.
         """
-
+        
         # The last update must have been an action, else this percept update is invalid.
         assert self.last_update == action_update, "Can only perform a percept update after an action update."
 
@@ -394,6 +395,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update other properties.
         self.total_reward += reward
         self.last_update = percept_update
+        
     # end def
 
     def playout(self, horizon):
@@ -442,7 +444,6 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # Use ρUCT to search for the next action.
-        best_action = MonteCarloSearchNode.mcts_planning(self, self.horizon, self.mc_simulations)
-        return best_action
+        return mcts_planning(self, self.horizon, self.mc_simulations)
     # end def
 # end class
