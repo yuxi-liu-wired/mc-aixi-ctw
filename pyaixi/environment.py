@@ -171,7 +171,10 @@ class Environment:
         """
 
         # TODO: implement
-        return util.bits_required(self.action)
+        
+        actions = [len(util.bits_required(action)) for action in self.valid_actions]
+        
+        return max(actions)
     # end def
 
     def observation_bits(self):
@@ -179,7 +182,9 @@ class Environment:
         """
 
         # TODO: implement
-        return util.bits_required(self.observation)
+        observations = [len(util.bits_required(obs)) for obs in self.valid_observations]
+        
+        return max(observations)
     # end def
 
     def percept_bits(self):
