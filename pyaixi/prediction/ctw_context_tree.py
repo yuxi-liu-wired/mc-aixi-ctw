@@ -157,10 +157,10 @@ class CTWContextTreeNode:
         # TODO: implement
         symbol = int(symbol)
         
-        if self.symbol_count[symbol] > 0:
-            self.symbol_count[symbol]-=1
+        self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
                         
         self.log_kt -= self.log_kt_multiplier(symbol)
+        
         self.update_log_probability()
     # end def
 
@@ -181,8 +181,10 @@ class CTWContextTreeNode:
 
         # TODO: implement
         
-        # The log turns the multiple to plus, and our appraoch is down to top
+        # The log turns the multiple to plus, and our approach is updating the whole tree from leaf to root
+        
         symbol = int(symbol)
+        
         self.log_kt+=self.log_kt_multiplier(symbol)
         
         self.update_log_probability()
@@ -385,11 +387,11 @@ class CTWContextTree:
             
             symbol_list = list(symbol_list)
                                
-        # As we are doing (depth-1)th order Markov model, 
-        # The history length at least be same as the depth 
+        # As we are doing depth-th order Markov model, 
+        # The history length at least bigger than the depth 
         # then calculate log uniform probability 
         
-        if len(symbol_list) + len(self.history)  < self.depth:
+        if len(symbol_list) + len(self.history)  < self.depth + 1:
             
             return math.log(math.pow(0.5,len(symbol_list)))
         
@@ -402,6 +404,7 @@ class CTWContextTree:
         # exp**(log a - log b) = a/b
         # transfer the log back
         p = math.exp(hy - h)
+        
         return p
     # end def
 
@@ -411,6 +414,9 @@ class CTWContextTree:
             - `num_symbols`: the number of updates (symbols) to revert. (Default of 1.)
         """
         # TODO: implement
+        
+        assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
+            
          
         for step in range(symbol_count):
             
@@ -469,11 +475,10 @@ class CTWContextTree:
             bit = int(bit)
             
             #cannot update context if the history is too short
-            #As the depth is represents (k-1)th order Markov model
-            #leaf node always stay in symbol count {0:0,1:0}
-            #Thus, at least's len(k) history in the context
+            #As the depth is represents k-th order Markov model
+            #Thus, at least len(k) history in the context
             
-            if len(self.history) < self.depth:
+            if len(self.history) < self.depth :
                 
                 self.update_history(bit)
                 
@@ -505,11 +510,10 @@ class CTWContextTree:
         '''
         R for root, C for Children , b for new bit
         eg: depth 3, history 110001b
-                                CCR 
+                               CCCR 
                                 
         b is the context of 1, 01, 001,
         as context is considered from tree leaf to node
-        By default, leafs will always stay in symbol_count(0,0)
         
         '''
         
@@ -526,8 +530,6 @@ class CTWContextTree:
                 
                 context.append(context[-1].children[index])
                 
-                last_node = context[-1]
-                
             else:
                 node =CTWContextTreeNode(self)
                 
@@ -538,13 +540,9 @@ class CTWContextTree:
                 
                 context.append(context[-1].children[index])
                 
-                last_node = node
-        
-        #for the sake of convenience
-        #leafs will always stay in symbol_count(0,0)
-        #if we update leafs, it will become kth mixture Markov model
-            
-        self.context = context[:-1]
+            last_node = context[-1]
+                    
+        self.context = context
         
         self.tree_size = self.root.size()
         
