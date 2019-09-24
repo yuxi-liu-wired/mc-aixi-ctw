@@ -249,7 +249,14 @@ class CTWContextTreeNode:
         return self.symbol_count[0] + self.symbol_count[1]
     # end def
 # end class
-
+    
+    
+class CTWContextTree_Undo:
+    
+    def __init__(self, tree):
+        
+        for field,value in tree.__dict__.items():
+            exec("self.field = value")
 
 class CTWContextTree:
     """ The high-level interface to an action-conditional context tree.
@@ -306,7 +313,26 @@ class CTWContextTree:
 
         # The size of this tree.
         self.tree_size = 1
+        
+        #whether to trade the computation power with storage
+        self.trade_off = False
+    
     # end def
+    
+    def set_tade_off(self,value):
+        '''
+        set the trade off between computation power and storage
+        
+        '''
+        
+        assert isinstance(value,bool),"invalid settings"
+        
+        self.trade_off = value
+        
+    def model_revert(self,undo_ctw):
+        
+        for field,value in undo_ctw.__dict__.items():
+            exec("self.field = value")
 
     def clear(self):
         """ Clears the entire context tree including all nodes and history.
@@ -335,6 +361,29 @@ class CTWContextTree:
 
         return symbol_list
     # end def
+    
+    def generate_random_actions(self,action_binary):
+        
+        '''
+            selection the actions according to their likelihood
+            - 'action_binary': [[]] : the list of binary representations of actons
+        '''
+        
+        probabilities = []
+        
+        for action in action_binary:
+            
+            p = self.predict(action)
+            
+            probabilities.append(p)
+            
+        index = random.choices(range(len(action_binary)),weights = probabilities,k=1)[0]
+        
+        action = action_binary[index]
+        
+        return action
+        
+        
 
     def generate_random_symbols_and_update(self, symbol_count):
         """ Returns a specified number of random symbols distributed according to
@@ -396,9 +445,19 @@ class CTWContextTree:
             return math.log(math.pow(0.5,len(symbol_list)))
         
         h  = self.root.log_probability
+        
+        if self.trade_off:
+            undo_ctw = CTWContextTree_Undo(self)
         self.update(symbol_list)
         hy = self.root.log_probability
-        self.revert(len(symbol_list))
+        
+        if self.trade_off:
+            
+            self.model_revert(CTWContextTree_Undo)
+            
+        else:
+            
+            self.revert(len(symbol_list))
         
         # log a - log b = log (a/b)
         # exp**(log a - log b) = a/b
