@@ -330,6 +330,10 @@ class CTWContextTree:
         self.trade_off = value
         
     def model_revert(self,undo_ctw):
+        '''
+        revert model to previous state
+        
+        '''
         
         for field,value in undo_ctw.__dict__.items():
             exec("self.field = value")
