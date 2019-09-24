@@ -95,12 +95,18 @@ class PacMan(environment.Environment):
                     self.power_pill.append([row,col])
                 
                 elif char.isalpha():
+                    
                     self.monster[char] = [row,col]
                     
                 
                 col+=1
                 
             row+=1
+            
+        for name,positon in self.monster.items():
+            
+            x,y = positon
+            self.layout[x][y] = " "
                           
     def perform_action(self, action):
         
@@ -109,6 +115,8 @@ class PacMan(environment.Environment):
         
         movement = direction[action]
         
+        old_x,old_y = self.pacman
+        self.layout[old_x][old_y] = " "
         self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
         
         x,y = self.pacman
@@ -207,6 +215,7 @@ class PacMan(environment.Environment):
                         valid_actions.append([[new_x,new_y],abs(p_x - new_x) + abs(p_y - new_y)])
                 
                 fun = max if self.super_pacman else min
+                
                 self.monster[name] = fun(valid_actions,key = lambda x : x[1])[0]
     
              
@@ -252,11 +261,11 @@ class PacMan(environment.Environment):
             
             if action == "w":
             
-                action = "top"
+                action = "down"
                 
             elif action == "s":
             
-                action  = "down"
+                action  = "top"
                 
             elif action == "a":
             
