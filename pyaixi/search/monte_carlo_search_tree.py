@@ -124,8 +124,7 @@ class MonteCarloSearchNode:
             # end if
 
             child = self.children[observation]
-            # TODO: decide if it should be (observation, reward)
-            # Algorithm 2 of [Veness, 2011].
+            # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
             reward_sum = reward + sample(child, agent, horizon - 1)
 
         elif self.visits == 0:
@@ -182,8 +181,7 @@ class MonteCarloSearchNode:
         reward_range = agent.range_of_reward()
         for action in all_actions:
             child = self.children[action]
-            # NOTE: Still not sure if it should divide by (horizon * reward_range)
-            action_ucb[action] = (child.value / reward_range
+            action_ucb[action] = (child.value / (horizon * reward_range)
                 + exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
         # end for
 
