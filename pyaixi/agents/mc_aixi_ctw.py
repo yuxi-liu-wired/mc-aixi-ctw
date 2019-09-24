@@ -401,6 +401,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     def generate_ctw_random_action(self,ctw):
         
         '''
+        
         A learnt policy should perform much better towards UCT for playout operations.
 
         '''
@@ -408,7 +409,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         
         action = ctw.generate_random_actions(actions)
         
-        return action
+        return self.decode_action(action)
         
         
     def playout(self, horizon):
