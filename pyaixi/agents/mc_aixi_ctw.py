@@ -397,7 +397,21 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.last_update = percept_update
         
     # end def
+    
+    def generate_ctw_random_action(self,ctw):
+        
+        '''
+        
+        A learnt policy should perform much better towards UCT for playout operations.
 
+        '''
+        actions = [ self.encode_action(action)for action in self.environment.valid_actions]
+        
+        action = ctw.generate_random_actions(actions)
+        
+        return self.decode_action(action)
+        
+        
     def playout(self, horizon):
         """ Simulates agent/enviroment interaction for a specified amount of steps
             (the given horizon value) where the agent actions are chosen uniformly

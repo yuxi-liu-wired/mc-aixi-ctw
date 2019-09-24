@@ -169,8 +169,31 @@ class TestCTWContextTree(unittest.TestCase):
         tree = CTWContextTree(3)
         tree.update("110")
         p = tree.predict("0100110")  
-        self.assertAlmostEquals(7/2048,p,8,"prediction wrong")
+        self.assertAlmostEqual(7/2048,p,8,"prediction wrong")
         
+    def test_generate_random_action(self):
+        tree = CTWContextTree(3)
+        tree.update("110")
+        tree.update("0100110")  
+        
+        action = [[0,1,1,1],[0,1,0,1]]
+        
+        t = True
+        
+        for epoch in range(10):
+           t = t and (tree.generate_random_actions(action) in action)
+        
+        assert t, "invalid random actions"
+        
+        
+    def test_model_revert(self):
+        tree = CTWContextTree(3)
+        tree.set_tade_off(True)
+        tree.update("110")
+        past_ctw =deepcopy(tree)
+        p = tree.predict("0100110")  
+        
+        assert check_fieldvalue(past_ctw,tree), "invalid reverting"
         
         
 
