@@ -156,6 +156,10 @@ class PacMan(environment.Environment):
         
         self.reward -= 1
         
+        if self.is_finished:
+            
+            return self.reward,self.observation
+        
         movement = direction[str(action)]
         
         old_x,old_y = self.pacman
