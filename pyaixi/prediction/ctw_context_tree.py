@@ -457,7 +457,7 @@ class CTWContextTree:
         
         if self.trade_off:
             
-            self.model_revert(CTWContextTree_Undo)
+            self.model_revert(undo_ctw)
             
         else:
             
