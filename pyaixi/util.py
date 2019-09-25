@@ -67,8 +67,6 @@ def encode(integer_symbol, bit_count):
         - `integer_symbol` - the integer value to be encoded.
         - `bit_count` - the number of bits from the end of the symbol list to decode.
     """
-    print("**"*20)
-    print(type(integer_symbol),integer_symbol)
     assert type(integer_symbol) == int and integer_symbol >= 0, "The given symbol must be an integer greater than or equal to zero."
 
     # Convert the symbol into a bit string.

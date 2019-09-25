@@ -73,8 +73,10 @@ class PacMan(environment.Environment):
         self.valid_actions = list(pacman_action_enum.keys())
         self.valid_observations = range(self.max_observation)
         
-        self.observation = None
+        self.observation = self.calculate_observation()
         self.action = None
+        
+        self.foragent = True
      
     def random_pellets(self,x):
         
@@ -147,11 +149,14 @@ class PacMan(environment.Environment):
                           
     def perform_action(self, action):
         
+        if self.foragent:
+            self.movement_monster()
+        
         self.action = action
         
         self.reward -= 1
         
-        movement = direction[action]
+        movement = direction[str(action)]
         
         old_x,old_y = self.pacman
         self.layout[old_x][old_y] = " "
@@ -220,7 +225,7 @@ class PacMan(environment.Environment):
             self.super_pacman = False
             
         self.reward = max(self.reward,0)
-        
+                
         self.observation = self.calculate_observation()
         
         return self.reward, self.observation
@@ -365,6 +370,9 @@ class PacMan(environment.Environment):
                 
                 self.monster[name] = fun(valid_actions,key = lambda x : x[1])[0]
     
+    def print(self):
+        
+        print(self)
              
                 
     def __str__(self):
