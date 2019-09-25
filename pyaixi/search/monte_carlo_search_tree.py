@@ -126,7 +126,6 @@ class MonteCarloSearchNode:
             # end if
 
             child = self.children[observation]
-            # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
             reward_sum = reward + self.sample(child, agent, horizon - 1)
 
         elif self.visits == 0:
@@ -145,8 +144,9 @@ class MonteCarloSearchNode:
 
         self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
         self.visits = self.visits + 1
-
+        
         return reward_sum
+        # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
     # end def
 
     def sample_iterations(self, agent, horizon, iterations):

@@ -172,7 +172,7 @@ class Environment:
 
         # TODO: implement
         
-        actions = [len(util.bits_required(action)) for action in self.valid_actions]
+        actions = [util.bits_required(action) for action in self.valid_actions]
         
         return max(actions)
     # end def
@@ -182,7 +182,7 @@ class Environment:
         """
 
         # TODO: implement
-        observations = [len(util.bits_required(obs)) for obs in self.valid_observations]
+        observations = [util.bits_required(obs) for obs in self.valid_observations]
         
         return max(observations)
     # end def
@@ -191,7 +191,6 @@ class Environment:
         """ Returns the maximum number of bits required to represent a percept.
         """
         # TODO: implement
-        # need to add number of bits needed for a prefix encoding to separate observation aprt and reward part??? no, because we know the 
         return self.observation_bits()+self.reward_bits()
     # end def
 
