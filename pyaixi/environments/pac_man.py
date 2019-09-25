@@ -19,12 +19,17 @@ from pyaixi import environment, util
 default_probability = 0.5
 layout_txt = "pacMan.txt"
 pacman_action_enum = util.enum('top', 'down', 'left', 'right')
-pacman_maze_observation_enum = util.enum(mNull = 0, mTopWall = 1,mDownWall = 2,
-                                                 mLeftWall = 4, mRightWall = 8,)
-pacman_smell_observation_enum = util.enum(mD_n = 0, mD_2 = 16, mD_3 = 32, mD_4 = 64)
-pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 128, oDown = 256, 
-                                                  sLeft = 512, sRight = 1024)
-pacman_power_observation_enum = util.enum(withouEffect = 0, underEffect = 2056)
+pacman_wall_observations_enum = util.enum(wNull = 0, wTopWall = 1,wDownWall = 2,
+                                                 wLeftWall = 4, wRightWall = 8)
+pacman_ghost_observation_enum = util.enum(gNull = 0, gTopWall = 16,gDownWall = 32,
+                                                 gLeftWall = 64, gRightWall = 128)
+        
+pacman_smell_observation_enum = util.enum(mD_n = 0, mD_2 = 256, mD_3 = 512, mD_4 = 1024)
+smell_constant = 4
+pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 2048, oDown = 4096, 
+                                                  sLeft = 8192, sRight = 16384)
+pacman_power_observation_enum = util.enum(withouEffect = 0, underEffect = 32768)
+
 
 direction = {
         '0':[1,0], #top
@@ -34,6 +39,8 @@ direction = {
               }
 
 direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
+
+
 
 class PacMan(environment.Environment):
     
@@ -53,11 +60,12 @@ class PacMan(environment.Environment):
         self.maximum_observation = 2**12
         self.layout = self.load(layout_txt)
         self.monster = dict()
+        self.monster_names = set(self.monster.keys())
         self.power_pill = []
         self.pacman = None
         self.find_Positions()
         self.reward = 0
-        self.isalive = True
+        self.is_finished = False
         self.super_pacman = False
         self.super_pacman_time = 0
         
@@ -154,7 +162,7 @@ class PacMan(environment.Environment):
             
             self.reward -= 10
             
-            self.isalive = False
+            self.is_finished = True
             
         else:
             
@@ -185,7 +193,7 @@ class PacMan(environment.Environment):
                     
                     self.reward -= 50
             
-                    self.isalive = False
+                    self.is_finished = True
             
             elif on_map == "S":
                 
@@ -212,6 +220,8 @@ class PacMan(environment.Environment):
     def calculate_observation(self):
         
         '''
+        only receives a 4-bit observation describing the wall configuration at 
+        its current location.
         
         only 4-bit observations indicating whether a ghost is visible (via direct line of sight) 
         in each of the four cardinal directions. 
@@ -225,20 +235,45 @@ class PacMan(environment.Environment):
         A final single bit indicates whether PacMan is under the effects of a power pill.
         
         '''
-        
+                
         observation = 0
         
         p_x, p_y = self.pacman
         
+        layout = np.array(self.layout)
+        shadow_layout = np.array(self.layout)
+        
         for key,l in direction.items():
-            
             x,y = l
             
             if self.layout[p_x+x][p_y+y] == "%":
                 
-                observation+= 2**int(key)
+                observation += 2**(int(key))
+        
+        for name,l in self.monster.items():
+            x,y = l
+            shadow_layout[x,y] = name
+            
+        if self.monster_names.intersection(shadow_layout[x,y+1:]):
+            #top
+            observation+= pacman_ghost_observation_enum.gTop
+        
+        if self.monster_names.intersection(shadow_layout[x,:y]):
+            #down
+            observation+= pacman_ghost_observation_enum.gDown
+            
+        if self.monster_names.intersection(shadow_layout[:x,y]):
+            #left
+            observation+= pacman_ghost_observation_enum.gLeft
+            
+        if self.monster_names.intersection(shadow_layout[x+1:,y]):
+            #right
+            observation+= pacman_ghost_observation_enum.gRight
+        
                 
         distance = [2,3,4]
+        
+        smelles = set()
         
         for x,line in enumerate(self.layout):
             
@@ -247,11 +282,13 @@ class PacMan(environment.Environment):
                 d = abs(p_x - x) + abs(p_y - p_y)
                 
                 if d in distance and symbol == "*":
-                    
-                    observation+=2**(d+2)
-                    
-        layout = np.array(self.layout)
+                    distance.remove(d)
+                    smelles.add(d)
         
+        for d in smelles:
+            
+            observation+=2**(d+smell_constant)
+                            
         if '*' in layout[x,y+1:]:
             #top
             observation+= pacman_sight_observation_enum.sTop
@@ -353,7 +390,7 @@ class PacMan(environment.Environment):
     def running(self):
             
             
-        while self.isalive:
+        while not self.is_finished:
                 
             print(self)
             print("==" * 20)
