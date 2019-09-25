@@ -148,7 +148,15 @@ class PacMan(environment.Environment):
             
         elif on_map.isalpha():
             
-            if self.super_pacman:
+            if on_map == "S":
+                
+                self.reward+=10
+                self.super_pacman = True
+                self.super_pacman_time += 100
+                self.layout[x][y] = " "
+                self.power_pill.remove([x,y])
+            
+            elif self.super_pacman:
                 
                 self.reward += 30
                 
@@ -171,14 +179,8 @@ class PacMan(environment.Environment):
             
                 self.isalive = False
             
-        elif on_map == "S":
-            
-            self.reward+=10
-            self.super_pacman = True
-            self.super_pacman_time = 100
-            self.layout[x][y] = " "
-            
-            
+                
+                
         if self.super_pacman_time > 0:
             
             self.super_pacman_time-=1
