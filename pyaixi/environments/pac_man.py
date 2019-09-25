@@ -12,12 +12,19 @@ from __future__ import unicode_literals
 import os
 import random
 import sys
+import numpy as np
 
 from pyaixi import environment, util
 
 default_probability = 0.5
 layout_txt = "pacMan.txt"
 pacman_action_enum = util.enum('top', 'down', 'left', 'right')
+pacman_maze_observation_enum = util.enum(mNull = 0, mTopWall = 1,mDownWall = 2,
+                                                 mLeftWall = 4, mRightWall = 8,)
+pacman_smell_observation_enum = util.enum(mD_n = 0, mD_2 = 16, mD_3 = 32, mD_4 = 64)
+pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 128, oDown = 256, 
+                                                  sLeft = 512, sRight = 1024)
+pacman_power_observation_enum = util.enum(withouEffect = 0, underEffect = 2056)
 
 direction = {
         '0':[1,0], #top
@@ -43,7 +50,7 @@ class PacMan(environment.Environment):
         self.rows = 0
         self.cols = 0
         self.maximum_reward = 0
-        self.maximum_observation = 0
+        self.maximum_observation = 2**12
         self.layout = self.load(layout_txt)
         self.monster = dict()
         self.power_pill = []
@@ -57,6 +64,9 @@ class PacMan(environment.Environment):
         self.valid_rewards = range(self.maximum_reward)
         self.valid_actions = list(pacman_action_enum.keys())
         self.valid_observations = range(self.maximum_observation)
+        
+        self.observation = None
+        self.action = None
      
     def random_pellets(self,x):
         
@@ -146,41 +156,45 @@ class PacMan(environment.Environment):
             
             self.isalive = False
             
-        elif on_map.isalpha():
+        else:
             
-            if on_map == "S":
+            if [x,y] in self.monster.values():
+                            
+                if self.super_pacman:
+                
+                    self.reward += 30
+                    
+                    for name, location in self.monster:
+                        
+                        if location == [x,y]:
+                            
+                            break
+                    
+                    m_x = 0 
+                    
+                    m_y = 0
+                    
+                    while self.layout[m_x][m_y] == "%":
+                    
+                        m_x = random.randint(0,self.rows-1)
+                        m_y = random.randint(0,self.cols-1)
+                    
+                    self.monster[name] ==[m_x,m_y]
+                    
+                else:
+                    
+                    self.reward -= 50
+            
+                    self.isalive = False
+            
+            elif on_map == "S":
                 
                 self.reward+=10
                 self.super_pacman = True
                 self.super_pacman_time += 100
                 self.layout[x][y] = " "
                 self.power_pill.remove([x,y])
-            
-            elif self.super_pacman:
-                
-                self.reward += 30
-                
-                name = self.monster[on_map]
-                
-                m_x = 0 
-                
-                m_y = 0
-            
-                while self.layout[m_x][m_y] == "%":
-                    
-                    m_x = random.randint(0,self.rows-1)
-                    m_y = random.randint(0,self.cols-1)
-                    
-                self.monster[name] ==[m_x,m_y]
-                
-            else:
-                
-                self.reward -= 10
-            
-                self.isalive = False
-            
-                
-                
+                                                                        
         if self.super_pacman_time > 0:
             
             self.super_pacman_time-=1
@@ -190,13 +204,79 @@ class PacMan(environment.Environment):
             self.super_pacman = False
             
         self.reward = max(self.reward,0)
+        
         self.observation = self.calculate_observation()
         
         return self.reward, self.observation
     
     def calculate_observation(self):
         
-        pass
+        '''
+        
+        only 4-bit observations indicating whether a ghost is visible (via direct line of sight) 
+        in each of the four cardinal directions. 
+        
+        In addition, the location of the food pellets is unknown except for a 3-bit observation that
+        indicates whether food can be smelt within a Manhattan distance of 2, 3 or 4 
+        from PacMan’s location, 
+        
+        and another 4-bit observation indicating whether there is food in its direct line of sight. 
+        
+        A final single bit indicates whether PacMan is under the effects of a power pill.
+        
+        '''
+        
+        observation = 0
+        
+        p_x, p_y = self.pacman
+        
+        for key,l in direction.items():
+            
+            x,y = l
+            
+            if self.layout[p_x+x][p_y+y] == "%":
+                
+                observation+= 2**int(key)
+                
+        distance = [2,3,4]
+        
+        for x,line in enumerate(self.layout):
+            
+            for y,symbol in enumerate(self.layout[x]):
+                
+                d = abs(p_x - x) + abs(p_y - p_y)
+                
+                if d in distance and symbol == "*":
+                    
+                    observation+=2**(d+2)
+                    
+        layout = np.array(self.layout)
+        
+        if '*' in layout[x,y+1:]:
+            #top
+            observation+= pacman_sight_observation_enum.sTop
+        
+        if '*' in layout[x,:y]:
+            #down
+            observation+= pacman_sight_observation_enum.sDown
+            
+        if '*' in layout[:x,y]:
+            #left
+            observation+= pacman_sight_observation_enum.sLeft
+            
+        if '*' in layout[x+1:,y]:
+            #right
+            observation+= pacman_sight_observation_enum.sRight
+            
+        if self.super_pacman:
+            
+            observation += pacman_power_observation_enum.underEffect
+            
+        return observation
+                    
+                
+            
+        
         
     def movement_monster(self):
         
@@ -213,7 +293,7 @@ class PacMan(environment.Environment):
                 new_x = 0
                 new_y = 0
                 
-                while self.layout[new_x][new_y] == "%":
+                while self.layout[new_x][new_y] == "%" and [new_x,new_y] not in self.monster.values():
                     
                     index = random.choices(range(4))[0]
                     m_x,m_y = direction_list[index]
@@ -278,6 +358,8 @@ class PacMan(environment.Environment):
             print(self)
             print("==" * 20)
             print(f"Reward :{self.reward}")
+            print(f"Super Pacman remainng time {self.super_pacman_time}")
+            print(f"Observation : {self.observation}")
             
             action = input("Action is :  ")
             
