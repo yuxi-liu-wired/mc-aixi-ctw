@@ -45,7 +45,7 @@ direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
 class PacMan(environment.Environment):
     
     
-    def __init__(self):
+    def __init__(self,options = {}):
         
         '''
         P stands for pacman
@@ -56,8 +56,8 @@ class PacMan(environment.Environment):
         '''
         self.rows = 0
         self.cols = 0
-        self.maximum_reward = 0
-        self.maximum_observation = 2**12
+        self.max_reward = 0
+        self.max_observation = 2**12
         self.layout = self.load(layout_txt)
         self.monster = dict()
         self.monster_names = set(self.monster.keys())
@@ -69,9 +69,9 @@ class PacMan(environment.Environment):
         self.super_pacman = False
         self.super_pacman_time = 0
         
-        self.valid_rewards = range(self.maximum_reward)
+        self.valid_rewards = range(self.max_reward)
         self.valid_actions = list(pacman_action_enum.keys())
-        self.valid_observations = range(self.maximum_observation)
+        self.valid_observations = range(self.max_observation)
         
         self.observation = None
         self.action = None
@@ -80,7 +80,7 @@ class PacMan(environment.Environment):
         
         if x == ' ' and default_probability > random.random():
             
-            self.maximum_reward += 1
+            self.max_reward += 1
             
             return "*"
         
@@ -89,9 +89,17 @@ class PacMan(environment.Environment):
             return x
         
     def load(self,layout):
+        
         pacMan_map = []
         
-        with open(layout) as f:
+        import os
+        cwd = os.getcwd()
+        
+        if "pyaixi/environments" not in cwd:
+            path = cwd+f"/pyaixi/environments/{layout}"
+        else:
+            path = layout
+        with open(path) as f:
             lines = f.readlines()
             for line in lines:
                 line = line.strip()
@@ -134,7 +142,7 @@ class PacMan(environment.Environment):
             x,y = positon
             self.layout[x][y] = " "
             
-        self.maximum_reward = self.maximum_reward * 10 + len(self.power_pill) * 100 * 30
+        self.max_reward = self.max_reward * 10 + len(self.power_pill) * 100 * 30
             
                           
     def perform_action(self, action):
