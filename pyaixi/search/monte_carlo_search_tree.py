@@ -116,7 +116,7 @@ class MonteCarloSearchNode:
             return 0.0
 
         elif self.type == chance_node:
-            print("sample percept")
+            print("(.)sample percept")
             # sample or from ρ(or|h)
             observation, reward = agent.generate_percept_and_update()
 
@@ -126,19 +126,19 @@ class MonteCarloSearchNode:
             # end if
             child = self.children[observation]
             reward_sum = reward + child.sample(agent, horizon - 1)
+            print("\t-- current horizon: "+str(horizon-1))
 
         elif self.visits == 0:
-            print("havent visited decision node before")
+            print("(/\)havent visited decision node before")
             reward_sum = agent.playout(horizon)
-            print("-- simulate and got expected reward of "+str(reward_sum))
+            print("\t-- simulate and got expected reward of "+str(reward_sum))
 
         else:
-            print("select action")
+            print("(+)select action")
             action = self.select_action(agent, horizon)
-            print("-- "+str(action))
             agent.model_update_action(action)
             reward_sum = self.children[action].sample(agent, horizon)
-            print("-- get reward sum: "+str(reward_sum))
+            print("\t-- get reward sum: "+str(reward_sum))
 
         # end if
 
@@ -209,7 +209,7 @@ def mcts_planning(agent, horizon, iterations):
         - `horizon`: how many cycles into the future to sample
         - `iterations`: how many samples to take
     """
-    print("Start MCTS")
+    print("START MCTS\n(.) is chance node ; (+) is decision node ; (/\) is a rollout \n=========================")
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
     return mc_tree.select_action(agent, horizon)

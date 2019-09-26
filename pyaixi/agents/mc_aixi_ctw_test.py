@@ -32,7 +32,6 @@ initial_percept()
 
 
 #### check if action is in action space
-#action = aixi.generate_random_action()
 print("++++ Search for optimal action:")
 action = aixi.search()
 def action_is_in_action_space():
