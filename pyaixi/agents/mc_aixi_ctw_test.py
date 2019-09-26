@@ -7,7 +7,7 @@ from pyaixi.agent import update_enum, action_update, percept_update
 
 import pytest
 
-m = 5 # agent horizon
+m = 4 # agent horizon
 d = 10 # CT depth
 s = 10 # number of simulations
 env = CoinFlip()
@@ -17,7 +17,7 @@ options = {'agent-horizon': m,
            'mc-simulations': s}
 
 print("---======== BEGIN TEST ========---")
-
+print("\tCoinFlip environment")
 aixi = MC_AIXI_CTW_Agent(env, options)
 
 
@@ -41,6 +41,7 @@ action_is_in_action_space()
 
 
 #### check if action is recorded in environment
+print("++++ Record selected actionin environment:")
 aixi.model_update_action(action)
 def action_is_recorded_in_env():
     assert action == aixi.environment.action, "environment did not record last action"
