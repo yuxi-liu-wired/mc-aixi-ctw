@@ -399,11 +399,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
     
     def generate_ctw_random_action(self,ctw):
-        
         '''
-        
         A learnt policy should perform much better towards UCT for playout operations.
-
         '''
         actions = [ self.encode_action(action)for action in self.environment.valid_actions]
         
@@ -425,7 +422,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         reward_sum = 0.0
-        self.set_savestate()
+        self.set_savestate() #save current agent and env state before simulating both
 
         for i in range(horizon):
             if self.environment.is_finished:
@@ -437,7 +434,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             reward_sum += reward
         # end for
 
-        self.restore_savestate()
+        self.restore_savestate() #end simulation and get agent and env back to state before simulation
         return reward_sum
     # end def
 

@@ -124,19 +124,21 @@ class MonteCarloSearchNode:
             if not (observation in self.children):
                 self.children[observation] = MonteCarloSearchNode(decision_node)
             # end if
-
             child = self.children[observation]
-            reward_sum = reward + self.sample(child, agent, horizon - 1)
+            reward_sum = reward + child.sample(agent, horizon - 1)
 
         elif self.visits == 0:
-            print("havent visited node before")
+            print("havent visited decision node before")
             reward_sum = agent.playout(horizon)
+            print("-- simulate and got expected reward of "+str(reward_sum))
 
         else:
             print("select action")
             action = self.select_action(agent, horizon)
+            print("-- "+str(action))
             agent.model_update_action(action)
-            reward_sum = self.sample(agent, horizon)
+            reward_sum = self.children[action].sample(agent, horizon)
+            print("-- get reward sum: "+str(reward_sum))
 
         # end if
 
@@ -187,7 +189,7 @@ class MonteCarloSearchNode:
         reward_range = agent.range_of_reward()
         for action in all_actions:
             child = self.children[action]
-            action_ucb[action] = (child.value / (horizon * reward_range)
+            action_ucb[action] = (child.mean / (horizon * reward_range)
                 + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
         # end for
 
@@ -207,6 +209,7 @@ def mcts_planning(agent, horizon, iterations):
         - `horizon`: how many cycles into the future to sample
         - `iterations`: how many samples to take
     """
+    print("Start MCTS")
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
     return mc_tree.select_action(agent, horizon)
