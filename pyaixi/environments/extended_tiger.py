@@ -104,7 +104,6 @@ class ExtendedTiger(environment.Environment):
         """
 
         assert self.is_valid_action(action)
-        observation = self.observation
         # Save the action.
         self.action = action
         if self.state == sitting:
@@ -114,12 +113,12 @@ class ExtendedTiger(environment.Environment):
             elif action == listen:
                 self.reward = normal
                 if (random.random() < self.default_probability):
-                    observation = self.tiger
+                    self.observation = self.tiger
                 else:
                     if self.tiger == left:
-                        observation = right
+                        self.observation = right
                     else:
-                        observation = left
+                        self.observation = left
             else:
                 self.reward = penalty
         else:
@@ -128,24 +127,30 @@ class ExtendedTiger(environment.Environment):
                     self.reward = eaten
                 else:
                     self.reward = gold
+                self.print()
+                self.clear_start()
             elif action == open_right:
                 if self.tiger == right:
                     self.reward = eaten
                 else:
                     self.reward = gold
+                self.print()
+                self.clear_start()
             else:
                 self.reward = penalty
-        return (observation, self.reward)
+        return (self.observation, self.reward)
     # end def
     def clear_start(self):
         print("Game Over! Starting New Game...")
         self.reward = 0
         self.state = sitting
         self.tiger = left if random.randint(0,1) == 1 else right
+        print(f"Tiger be set at the :{self.tiger}")
         
     def print(self):
         print("==" * 20)
         print(f"Reward :{self.reward-100}")
+        print(f"State :{tiger_state_enum[self.state]}")
         print(f"Actions :{tiger_action_enum[self.action]}")
         print(f"Tiger is at {tiger_observation_enum[self.tiger]}")
         print(f"Observation : {tiger_observation_enum[self.observation]}")
