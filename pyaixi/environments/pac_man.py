@@ -100,8 +100,15 @@ class PacMan(environment.Environment):
         
         if "pyaixi/environments" not in cwd:
             path = cwd+f"/pyaixi/environments/{layout}"
+        
+        elif "pyaixi" in cwd:
+            
+            tokens = cwd.split("/")
+            path   = "/".join(tokens[:tokens.index("pyaixi")]) + f"/pyaixi/environments/{layout}"
+            
         else:
             path = layout
+            
         with open(path) as f:
             lines = f.readlines()
             for line in lines:
