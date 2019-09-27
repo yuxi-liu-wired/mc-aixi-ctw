@@ -98,7 +98,8 @@ class PacMan(environment.Environment):
         cwd = os.getcwd()
         
         if "pyaixi/environments" not in cwd:
-            path = cwd+f"/pyaixi/environments/{layout}"
+            path = cwd+f"/../../pyaixi/environments/{layout}"
+            
         else:
             path = layout
         with open(path) as f:

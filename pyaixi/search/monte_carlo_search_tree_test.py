@@ -5,9 +5,9 @@ from pyaixi.agent import update_enum, action_update, percept_update
 
 import pytest
 
-m = 5 # agent horizon
-d = 5 # CT depth
-s = 5 # number of simulations
+m = 3 # agent horizon
+d = 10 # CT depth
+s = 10 # number of simulations
 env = CoinFlip()
 
 options = {'agent-horizon': m,
