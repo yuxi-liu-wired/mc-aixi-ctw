@@ -57,7 +57,8 @@ class PacMan(environment.Environment):
         self.rows = 0
         self.cols = 0
         self.max_reward = 0
-        self.max_observation = 2**12
+        self.pellets_remaining = 0
+        self.max_observation = 2**16
         self.layout = self.load(layout_txt)
         self.monster = dict()
         self.monster_names = set(self.monster.keys())
@@ -105,8 +106,9 @@ class PacMan(environment.Environment):
             lines = f.readlines()
             for line in lines:
                 line = line.strip()
-                line = map(self.random_pellets,line)
-                pacMan_map.append(list(line)) 
+                line = list(map(self.random_pellets,line))
+                self.pellets_remaining += line.count("*")
+                pacMan_map.append(line) 
         
         self.rows = len(pacMan_map)
         self.cols = len(pacMan_map[0])
@@ -156,9 +158,11 @@ class PacMan(environment.Environment):
         
         self.reward -= 1
         
-        if self.is_finished:
+        if self.pellets_remaining == 0:
             
-            return self.reward,self.observation
+            self.layout = self.load(layout_txt) 
+            
+            return self.perform_action(action)
         
         movement = direction[str(action)]
         
@@ -178,8 +182,8 @@ class PacMan(environment.Environment):
         elif on_map == "%":
             
             self.reward -= 10
+            self.pacman = [old_x,old_y]
             
-            self.is_finished = True
             
         else:
             
@@ -210,7 +214,6 @@ class PacMan(environment.Environment):
                     
                     self.reward -= 50
             
-                    self.is_finished = True
             
             elif on_map == "S":
                 
@@ -375,7 +378,10 @@ class PacMan(environment.Environment):
                 self.monster[name] = fun(valid_actions,key = lambda x : x[1])[0]
     
     def print(self):
-        
+        print("==" * 20)
+        print(f"Reward :{self.reward}")
+        print(f"Super Pacman remainng time {self.super_pacman_time}")
+        print(f"Observation : {self.observation}")
         print(self)
              
                 
