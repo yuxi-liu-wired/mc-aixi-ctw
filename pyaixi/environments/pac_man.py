@@ -210,7 +210,7 @@ class PacMan(environment.Environment):
                     
                     m_y = 0
                     
-                    while self.layout[m_x][m_y] == "%":
+                    while self.layout[m_x][m_y] == "%" and [m_x,m_y] in self.monster.values():
                     
                         m_x = random.randint(0,self.rows-1)
                         m_y = random.randint(0,self.cols-1)
