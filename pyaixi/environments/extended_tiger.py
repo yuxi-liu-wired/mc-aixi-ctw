@@ -21,7 +21,8 @@ description = 'extended_tiger.txt'
 
 tiger_action_enum = util.enum('stand','listen','open_left_door','open_right_door')
 print(tiger_action_enum)
-tiger_observation_enum = util.enum('left','right')
+tiger_observation_enum = util.enum('left','right','void')
+tiger_reward_enum = util.enum(penalty = 90, eaten = 0, gold = 130, normal = 99)
 tiger_state_enum = util.enum('sitting', 'standing')
 
 sitting = tiger_state_enum.sitting
@@ -30,8 +31,16 @@ stand = tiger_action_enum.stand
 listen = tiger_action_enum.listen
 open_left = tiger_action_enum.open_left_door
 open_right = tiger_action_enum.open_right_door
+
 left = tiger_observation_enum.left
 right = tiger_observation_enum.right
+void = tiger_observation_enum.void
+
+penalty = tiger_reward_enum.penalty
+normal = tiger_reward_enum.normal
+eaten = tiger_reward_enum.eaten
+gold = tiger_reward_enum.gold
+
 
 class ExtendedTiger(environment.Environment):
     """ A biased coin is flipped and the agent is tasked with predicting how it
@@ -73,7 +82,6 @@ class ExtendedTiger(environment.Environment):
         """
 
         # Set up the base environment.
-        self.maxium_reward = 30
         environment.Environment.__init__(self, options = options)
 
         # Defines the acceptable action values.
@@ -82,12 +90,12 @@ class ExtendedTiger(environment.Environment):
         # Defines the acceptable observation values.
         self.valid_observations = list(tiger_observation_enum.keys())
         
-        self.valid_rewards = range(self.maxium_reward)
+        self.valid_rewards = list(tiger_reward_enum.keys())
         # Set an initial percept.
         self.reward = 0
         self.is_finished = False
         self.state = sitting
-        self.observation = left if random.randint(0,1) == 1 else right
+        self.observation = void
         self.tiger = left if random.randint(0,1) == 1 else right
     # end def
 
@@ -101,10 +109,10 @@ class ExtendedTiger(environment.Environment):
         self.action = action
         if self.state == sitting:
             if action == stand:
-                self.reward = -1
+                self.reward = normal
                 self.state = standing
             elif action == listen:
-                self.reward = -1
+                self.reward = normal
                 if (random.random() < self.default_probability):
                     observation = self.tiger
                 else:
@@ -113,31 +121,32 @@ class ExtendedTiger(environment.Environment):
                     else:
                         observation = left
             else:
-                self.reward = -10
+                self.reward = penalty
         else:
             if action == open_left:
                 if self.tiger == left:
-                    self.reward = -100
+                    self.reward = eaten
                 else:
-                    self.reward = 30
+                    self.reward = gold
             elif action == open_right:
                 if self.tiger == right:
-                    self.reward = -100
+                    self.reward = eaten
                 else:
-                    self.reward = 30
+                    self.reward = gold
             else:
-                self.reward = -10
-        self.reward = max(self.reward,0)
+                self.reward = penalty
         return (observation, self.reward)
     # end def
     def clear_start(self):
+        print("Game Over! Starting New Game...")
         self.reward = 0
         self.state = sitting
         self.tiger = left if random.randint(0,1) == 1 else right
         
     def print(self):
         print("==" * 20)
-        print(f"Reward :{self.reward}")
+        print(f"Reward :{self.reward-100}")
+        print(f"Actions :{tiger_action_enum[self.action]}")
         print(f"Tiger is at {tiger_observation_enum[self.tiger]}")
         print(f"Observation : {tiger_observation_enum[self.observation]}")
         print(self)
