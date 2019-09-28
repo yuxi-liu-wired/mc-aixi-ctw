@@ -186,13 +186,8 @@ class PacMan(environment.Environment):
         
         old_x,old_y = self.pacman
         self.layout[old_x][old_y] = " "
-<<<<<<< HEAD
         
         self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
-=======
-        if self.layout[self.pacman[0] + movement[0]][self.pacman[1] + movement[1]] != '%':
-            self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
->>>>>>> 8f8f5e27c347282213e7ca970b8c0af91e17fd6a
         
         x,y = self.pacman
         if (x,y) in self.magic_channel:
