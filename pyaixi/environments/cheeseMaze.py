@@ -19,7 +19,7 @@ layout = "cheeseMaze.txt"
 
 mouse_action_list = util.enum('up','down','left','right')
 #                                       5      7      8      9     10     12
-mouse_valid_observations = util.enum('5','7','8','9','10','12')
+mouse_valid_observations = util.enum(five = 5,seven = 7,eight = 8,nine = 9,ten = 10,twelve = 12)
 
 direction = {
         '0':[1,0], #up
@@ -50,7 +50,7 @@ def readMazeFile():
 			if col == '1':
 				print('*', end = '')
 			else:
-				print(' ', end = '')
+				print(col, end = '')
 		print()
 	return maze
 
@@ -64,8 +64,10 @@ class CheeseMaze(environment.Environment):
 		self.cheese = (3,3)
 		self.valid_rewards = range(2**5)
 		self.valid_actions = list(mouse_action_list.keys())
-		self.valid_observations = list(mouse_valid_observations.keys())
-		self.reward = 16
+		# self.valid_observations = list(mouse_valid_observations.keys())
+		self.valid_observations = range(2*4)
+		self.observation = 0
+		self.reward = 0
 
 
 	def perform_action(self, action):
@@ -75,18 +77,20 @@ class CheeseMaze(environment.Environment):
 		assert self.is_valid_action(action)
 		self.action = action
 		self.move(action)
+		self.reward = max(self.reward,0)
+		return self.reward, self.observation
 
 	def move(self, action):
 		assert self.is_valid_action(action)
 		movement = direction[str(action)]
-		if(maze[self.mouse[0]+movement[0]][self.mouse[1]+movement[1]] == '1'):
+		if(self.maze[self.mouse[0]+movement[0]][self.mouse[1]+movement[1]] == '1'):
 			self.reward -= 10
 		else:
 			self.mouse = (self.mouse[0]+movement[0], self.mouse[1]+movement[1])
 			self.reward -= 1
 			if self.check_game_over():
 				self.reward += 10
-		self.observation = maze[self.mouse[0]][self.mouse[1]]
+		self.observation = int(self.maze[self.mouse[0]][self.mouse[1]])
 
 	def check_game_over(self):
 		if self.mouse[0] == self.cheese[0] and self.mouse[1] == self.cheese[1]:
