@@ -179,7 +179,8 @@ class PacMan(environment.Environment):
         
         old_x,old_y = self.pacman
         self.layout[old_x][old_y] = " "
-        self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
+        if self.layout[self.pacman[0] + movement[0]][self.pacman[1] + movement[1]] != '%':
+            self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
         
         x,y = self.pacman
         
