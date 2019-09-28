@@ -15,7 +15,7 @@ from pyaixi import environment, util
 
 mouse_action_list = util.enum('up','down','left','right')
 #                                       5      7      8      9     10     12
-mouse_valid_observations = util.enum('0101','0111','1000','1001','1010','1100')
+mouse_valid_observations = util.enum('5','7','8','9','10','12')
 
 direction = {
         '0':[1,0], #up
@@ -27,7 +27,7 @@ direction = {
 
 def readMazeFile():
 	maze = []
-	f = open("pacmanMaze","r")
+	f = open("cheeseMaze.txt","r")
 	row = 0;
 	for line in f.readlines():
 		maze.append(line[:-1].split(','))
@@ -36,64 +36,63 @@ def readMazeFile():
 		for col in row:
 			if col == '1':
 				print('*', end = '')
-			elif col == '0':
+			else:
 				print(' ', end = '')
 		print()
 	return maze
 
 
 class CheeseMaze(environment.Environment):
-	default_probability = 0.5
+
 	def __init__(self, options = {}):
 		environment.Environment.__init__(self, options = options)
 		self.maze = readMazeFile()
 		self.mouse = (1,1)
 		self.cheese = (3,3)
-		self.valid_reward = range(2**5)
-		self.valid_action = list(mouse_action_list.keys())
-		self.valid_observations = list(mouse_valid_observations.keys())
+		self.valid_rewards = range(2**5)
+		self.valid_actions = list(mouse_action_list.keys())
 
-    def perform_action(self, action):
-        """ Receives the agent's action and calculates the new environment percept.
-        """
 
-        assert self.is_valid_action(action)
-        self.action = action
-        self.move(action)
+	def perform_action(self, action):
+		""" Receives the agent's action and calculates the new environment percept.
+		"""
 
-    def move(self, action):
-        assert self.is_valid_action(action)
-        movement = direction[str(action)]
-        if(maze[self.mouse[0]+movement[0]][self.mouse[1]+movement[1]] == '1'):
-        	self.reward -= 10
-        else:
-        	self.mouse = (self.mouse[0]+movement[0], self.mouse[1]+movement[1])
-        	self.reward -= 1
-        	if self.check_game_over():
-        		self.reward += 10
-        self.observation = maze[self.mouse[0]][self.mouse[1]]
+		assert self.is_valid_action(action)
+		self.action = action
+		self.move(action)
 
-    def check_game_over(self):
-    	if self.mouse[0] == self.cheese[0] and self.mouse[1] == self.cheese[1]:
-    		self.is_finished = True
-    	return True
+	def move(self, action):
+		assert self.is_valid_action(action)
+		movement = direction[str(action)]
+		if(maze[self.mouse[0]+movement[0]][self.mouse[1]+movement[1]] == '1'):
+			self.reward -= 10
+		else:
+			self.mouse = (self.mouse[0]+movement[0], self.mouse[1]+movement[1])
+			self.reward -= 1
+			if self.check_game_over():
+				self.reward += 10
+		self.observation = maze[self.mouse[0]][self.mouse[1]]
+
+	def check_game_over(self):
+		if self.mouse[0] == self.cheese[0] and self.mouse[1] == self.cheese[1]:
+			self.is_finished = True
+		return True
 
     
-    def print(self):
-        """ Returns a string indicating the status of the environment.
-        """
+	def print(self):
+		""" Returns a string indicating the status of the environment.
+		"""
 
-        message = "Action: " + \
-                  (self.action) + \
-                  ", observation: " + \
-                  self.observation + \
-                  ", reward: %d" % self.reward
+		message = "Action: " + \
+				(self.action) + \
+				", observation: " + \
+				self.observation + \
+				", reward: %d" % self.reward
 
-        return message
+		return message
     	
 
-
-
+readMazeFile()
 
 
 
