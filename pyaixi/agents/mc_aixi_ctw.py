@@ -21,12 +21,11 @@ sys.path.insert(0, PROJECT_ROOT)
 # Ensure xrange is defined on Python 3.
 from six.moves import xrange
 
-from pyaixi import agent, prediction, search, util
+from pyaixi import agent, prediction, util
 
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
-from pyaixi.search import monte_carlo_search_tree
-from pyaixi.search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node
+from pyaixi.search.monte_carlo_search_tree import MonteCarloSearchNode, mcts_planning
 
 
 class MC_AIXI_CTW_Undo:
@@ -62,10 +61,11 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         as well as to generate actions and precepts according to the model distribution:
 
-         - `generate_action()`
-         - `gen_percept()`
-         - `generate_percept_and_update()`
-         - `generate_random_action()`
+         - `generate_action()`: sample next action from the CTW model
+         - `generate_percept()`: sample next percept from the CTW model
+         - `generate_percept_and_update()`:
+                sample next percept from the CTW model, and update the CTW model with the sampled percept
+         - `generate_random_action()`: sample next action uniformly randomly
 
         Actions are chosen via the UCT algorithm, which is orchestrated by a
         high-level search function and a playout policy:
@@ -82,8 +82,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
          - `decode_action()`
          - `decode_observation()`
-         - `decode_percept()`
          - `decode_reward()`
+         - `decode_percept()`
          - `encode_action()`
          - `encode_percept()`
 
@@ -106,7 +106,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     def __init__(self, environment = None, options = {}):
         """ Construct a MC-AIXI-CTW learning agent from the given configuration values and the environment.
 
-             - `environment` is an instance of the pyaixi.Environment class that the agent with interact with.
+             - `environment` is an instance of the pyaixi.Environment class that the agent interact with.
              - `options` is a dictionary of named options and their values.
 
             `options` must contain the following mandatory options:
@@ -119,7 +119,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
                                   Defaults to '0', which is indefinite learning.
         """
 
-        # Set up the base agent options, which handles getting and setting the learning period, amongst other basic values.
+        # Sets up the base agent options, which handles getting and setting the
+        # learning period, amongst other basic values.
         agent.Agent.__init__(self, environment = environment, options = options)
 
         # The agent's context tree depth.
@@ -145,8 +146,12 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.mc_simulations = int(options['mc-simulations'])
 
         self.reset()
+
+        # Saves a state of the agent that allows restoring the savestate.
+        self.savestate = MC_AIXI_CTW_Undo(self)
     # end def
 
+    ## Decoders and encoders.
     def decode_action(self, symbol_list):
         """ Returns the action decoded from the beginning of the given list of symbols.
 
@@ -225,41 +230,67 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return symbol_list
     # end def
 
+    ## Predict future history using CTW.
     def generate_action(self):
-        """ Returns an action generated according to the agent's history
-            statistics by doing rejection sampling from the context tree.
+        """ Returns an action, distributed according to the agent's history
+            statistics, by sampling from the context tree.
         """
 
-        # TODO: implement
-        return None
+        assert self.last_update == percept_update,  "Can only generate an action after a percept update."
+
+        action_bit_count = self.environment.action_bits()
+        action_bits = self.context_tree.generate_random_symbols(action_bit_count)
+        return self.decode_action(action_bits)
     # end def
 
     def generate_percept(self):
-        """ Returns a percept (an observation, reward pair) distributed according to the agent's history
-            statistics by sampling from the context tree.
+        """ Returns a percept (observation, reward), distributed according to the agent's history
+            statistics, by sampling from the context tree.
         """
 
-        # TODO: implement
+        assert self.last_update == action_update,  "Can only generate a percept after an action update."
 
-        return None
+        percept_bit_count = self.environment.percept_bits()
+        percept_bits = self.context_tree.generate_random_symbols(percept_bit_count)
+        return self.decode_percept(percept_bits)
     # end def
 
     def generate_percept_and_update(self):
-        """ Returns a percept (an observation, reward pair) distributed according to the agent's history
-            statistics, after updating the context tree with it.
+        """ Generates a percept (observation, reward), distributed according to the agent's history
+            statistics, then updates the context tree with it, and return it.
+            THe percept would update parameters the context tree (learning) iff the agent is still learning.
+            otherwise, it would only update the history of the context tree.
         """
 
-        # TODO: implement
-        return None
+        assert self.last_update == action_update,  "Can only perform a percept update after an action update."
+        observation, reward = self.generate_percept()
+        self.model_update_percept(observation, reward)
+        # Note that this would cause learning iff the agent is still learning
+        return observation, reward
     # end def
 
-    def get_predicted_action_probability(self, action):
+    ## Inquire its model for probability of future.
+    # TODO: what is this for?
+    def action_probability(self, action):
         """ Returns the probability of selecting a particular action according to the
             agent's internal model of its own behaviour.
 
             - `action`: the action we wish to find the likelihood of.
         """
-        # TODO: implement
+
+        return self.context_tree.predict(self.encode_action(action))
+    # end def
+
+    # TODO: what is this for?
+    def percept_probability(self, observation, reward):
+        """ Returns the probability of receiving percept (observation, reward),
+            according to the agent's environment model.
+
+            - `observation`: the observation part of the percept we wish to find the likelihood of.
+            - `reward`: the reward part of the percept we wish to find the likelihood of.
+        """
+
+        return self.context_tree.predict(self.encode_percept(observation, reward))
     # end def
 
     def history_size(self):
@@ -269,6 +300,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return len(self.context_tree.history)
     # end def
 
+    # TODO: what is this for?
     def maximum_bits_needed(self):
         """ Returns the maximum number of bits needed to represent actions or percepts.
             NOTE: this is for binary alphabets.
@@ -277,12 +309,30 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return max(self.environment.action_bits(), self.environment.percept_bits())
     # end def
 
+    ## For saving and loading the agent state.
     def model_revert(self, undo_instance):
-        """ Revert the agent's internal model of the world to that of a previous time cycle,
+        """ Revert the agent's internal environment model to that of a previous time cycle,
             using the given undo class instance.
         """
 
-        # TODO: implement
+        self.age = undo_instance.age
+        self.total_reward = undo_instance.total_reward
+        self.last_update = undo_instance.last_update
+
+        old_history_size = undo_instance.history_size
+        current_history_size = self.history_size()
+        if current_history_size > old_history_size:
+            self.context_tree.revert(current_history_size - old_history_size)
+    # end def
+
+    def set_savestate(self):
+        """ Sets a savestate that can later be restored.
+        """
+        self.savestate = MC_AIXI_CTW_Undo(self)
+    # end def
+
+    def restore_savestate(self):
+        self.model_revert(self.savestate)
     # end def
 
     def model_size(self):
@@ -292,38 +342,39 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     # end def
 
     def model_update_action(self, action):
-        """ Update the agent's model of the world with a percept from the
-            environment.
+        """ Updates the agent's environment model with an action.
 
-            - `observation`: the observation that was received.
-            - `reward`: the reward that was received.
+            - `action`: the action that the agent performed.
         """
 
-        # The last update must have been a percept, else this action update is invalid.
+        # The action must be valid.
         assert self.environment.is_valid_action(action), "Invalid action given."
+
+        # The last update must have been a percept, else this action update is invalid.
         assert self.last_update == percept_update, "Can only perform an action update after a percept update."
 
-        # Update the agent's internal model of the world after performing an action.
+        # Update the agent's internal environment model after performing an action.
+        self.environment.perform_action(action)
 
         # Get the symbols that represent this action.
         action_symbols = self.encode_action(action)
 
         # Update the context tree.
-        self.context_tree.update_history(action_symbols);
+        self.context_tree.update_history(action_symbols)
 
         # Update other properties.
-        self.age += 1;
+        self.age += 1
         self.last_update = action_update
     # end def
 
     def model_update_percept(self, observation, reward):
-        """ Update the agent's model of the world with a percept from the
-            environment.
+        """ Updates the agent's environment model with percept (observation, reward)
+            from the environment.
 
             - `observation`: the observation that was received.
             - `reward`: the reward that was received.
         """
-
+        
         # The last update must have been an action, else this percept update is invalid.
         assert self.last_update == action_update, "Can only perform a percept update after an action update."
 
@@ -344,25 +395,25 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update other properties.
         self.total_reward += reward
         self.last_update = percept_update
+        
     # end def
-
-    def percept_probability(self, observation, reward):
-        """ Returns the probability of receiving a particular percept
-            (the given observation and reward) according to the agent's environment model.
-
-            - `observation`: the observation part of the percept we wish to find the likelihood of.
-
-            - `reward`: the reward part of the percept we wish to find the likelihood of.
-        """
-
-        # TODO: implement
-        return None
-    # end def
-
+    
+    def generate_ctw_random_action(self,ctw):
+        '''
+        A learnt policy should perform much better towards UCT for playout operations.
+        '''
+        actions = [ self.encode_action(action)for action in self.environment.valid_actions]
+        
+        action = ctw.generate_random_actions(actions)
+        
+        return self.decode_action(action)
+        
+        
     def playout(self, horizon):
-        """ Simulate agent/enviroment interaction for a specified amount of steps
+        """ Simulates agent/enviroment interaction for a specified amount of steps
             (the given horizon value) where the agent actions are chosen uniformly
-            at random and percepts are generated.
+            at random and percepts are generated. After the playout, revert the
+            agent state to before playout.
 
             Returns the total reward from the simulation.
 
@@ -370,19 +421,31 @@ class MC_AIXI_CTW_Agent(agent.Agent):
                          (the search horizon) to simulate.
         """
 
-        # TODO: implement
+        reward_sum = 0.0
+        self.set_savestate() #save current agent and env state before simulating both
 
-        return 0.0
+        for i in range(horizon):
+            if self.environment.is_finished:
+                break
+            # note that generate_action() generates according to the past
+            # while generate_random_action() generates randomly uniformly
+            self.model_update_action(self.generate_random_action())
+            _, reward = self.generate_percept_and_update()
+            reward_sum += reward
+        # end for
+
+        self.restore_savestate() #end simulation and get agent and env back to state before simulation
+        return reward_sum
     # end def
 
     def reset(self):
         """ Resets the agent and clears the context tree.
         """
 
-        # Reset the context tree.
+        # Clears the context tree.
         self.context_tree.clear()
 
-        # Reset the basic agent details.
+        # Resets the basic agent details: age, total_reward, last_update.
         agent.Agent.reset(self)
     # end def
 
@@ -391,10 +454,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             (predictive UCT).
         """
 
-        # Use rhoUCT to search for the next action.
-
-        # TODO: implement
-
-        return best_action
+        # Use ρUCT to search for the next action.
+        return mcts_planning(self, self.horizon, self.mc_simulations)
     # end def
 # end class

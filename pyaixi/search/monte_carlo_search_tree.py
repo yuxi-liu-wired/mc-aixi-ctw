@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Define a class to implement a Monte Carlo search tree.
+Defines a class to implement a Monte Carlo search tree.
+
+Implementation based on:
+Cameron B Browne et al. “A Survey of Monte Carlo Tree Search Methods.”, 2012
+Joel Veness et al. “A Monte-Carlo Aixi Approximation.”, 2011
 """
 
 from __future__ import division
@@ -21,18 +25,19 @@ sys.path.insert(0, PROJECT_ROOT)
 from pyaixi import util
 
 # An enumeration type used to specify the type of Monte Carlo search node.
-# Chance nodes represent a set of possible observation
-# (one child per observation) while decision nodes
-# represent sets of possible actions (one child per action).
+# Chance nodes represent sets of possible observations (one child per observation).
+# Decision nodes represent sets of possible actions (one child per action).
 # Decision and chance nodes alternate.
 nodetype_enum = util.enum('chance', 'decision')
 
-# Define some short cuts for ease of reference.
+# Defines some shortcuts for ease of reference.
 chance_node = nodetype_enum.chance
 decision_node = nodetype_enum.decision
 
+
 class MonteCarloSearchNode:
     """ A class to represent a node in the Monte Carlo search tree.
+
         The nodes in the search tree represent simulated actions and percepts
         between an agent following an upper confidence bounds (UCB) policy and a generative
         model of the environment represented by a context tree.
@@ -41,10 +46,10 @@ class MonteCarloSearchNode:
         available actions through sampling. Sampling proceeds several time steps
         into the future according to the size of the agent's horizon.
         (`MC_AIXI_CTW_Agent.horizon`)
- 
-        The nodes are one of two types (`nodetype_enum`), decision nodes are those
-        whose children represent actions from the agent and chance nodes are those
-        whose children represent percepts from the environment.
+
+        The nodes are one of two types (`nodetype_enum`):
+         - Decision nodes have children chance nodes, linked by agent actions.
+         - Chance nodes have child decision nodes, linked by environmental percepts.
 
         Each MonteCarloSearchNode maintains several bits of information:
 
@@ -68,16 +73,18 @@ class MonteCarloSearchNode:
     # Class attributes.
 
     # Exploration constant for the UCB action policy.
-    exploration_constant = 2.0
-
-    # Unexplored action bias.
-    unexplored_bias = 1000000000.0
+    exploration_constant = math.sqrt(2.0)
 
     # Instance methods.
 
     def __init__(self, nodetype):
         """ Create a new search node of the given type.
         """
+
+        # The type of this node indicates whether its children represent actions
+        # (decision node) or percepts (chance node).
+        assert nodetype in nodetype_enum, "The given value %s is a not a valid node type." % str(nodetype)
+        self.type = nodetype
 
         # The children of this node.
         # The symbols used as keys at each level may be either action or observation,
@@ -87,40 +94,122 @@ class MonteCarloSearchNode:
         # The sampled expected reward of this node.
         self.mean = 0.0
 
-        # The type of this node indicates whether its children represent actions
-        # (decision node) or percepts (chance node).
-        assert nodetype in nodetype_enum, "The given value %s is a not a valid node type." % str(nodetype)
-        self.type = nodetype
-
         # The number of times this node has been visited during sampling.
         self.visits = 0
     # end def
 
     def sample(self, agent, horizon):
-        """ Returns the accumulated reward from performing a single sample on this node.
+        """
+        Performs one iteration of the MC tree loop: select, rollout, update.
+        Returns the accumulated reward below this node.
 
             - `agent`: the agent doing the sampling
-
-            - `horizon`: how many cycles into the future to sample
+            - `horizon`: how many steps into the future to sample
         """
 
-        # TODO: implement
-        reward = 0.0
+        reward_sum = 0.0
+        agent.set_savestate()
 
+        if horizon == 0:
+            print("(-)reached horizon")
+            assert self.type == decision_node
+            return 0.0
+
+        elif self.type == chance_node: #Sample Percept if this is a chance_node
+            print("(.)sample percept")
+            # sample or from ρ(or|h)
+            observation, reward = agent.generate_percept_and_update()
+            # create node hor if it is an unvisited child.
+            if not (observation in self.children):
+                self.children[observation] = MonteCarloSearchNode(decision_node)
+            # end if
+            child = self.children[observation]
+            print("\t-- current horizon: "+str(horizon-1))
+            reward_sum = reward + child.sample(agent, horizon - 1)
+
+        elif self.visits == 0: #Rollout if decision_node hasnt been visited
+            print("(/\)havent visited decision node before")
+            reward_sum = agent.playout(horizon)
+            print("\t-- rollout, got expected reward: "+str(reward_sum))
+
+        else: #Select Action if this is a decision_node
+            print("(*)select action")
+            action = self.select_action(agent, horizon)
+            agent.model_update_action(action)
+            reward_sum = self.children[action].sample(agent, horizon)
+            print("\t-- get reward sum: "+str(reward_sum))
+        # end if
+
+        agent.restore_savestate()
+
+        # update node
+        self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
+        self.visits = self.visits + 1
         
-        return reward
+        return reward_sum
+        # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
     # end def
 
-    def select_action(self, agent):
+    def sample_iterations(self, agent, horizon, iterations):
+        """ Performs sampling for many iterations at this node.
+
+            - `agent`: the agent doing the sampling
+            - `horizon`: how many steps into the future to sample
+            - `iterations`: how many iterations to perform
+        """
+
+        for i in range(iterations):
+            self.sample(agent, horizon)
+    # end def
+
+    def select_action(self, agent, horizon):
         """ Returns an action selected according to UCB policy.
 
              - `agent`: the agent which is doing the sampling.
+             - `horizon`: how many steps into the future to sample
         """
 
-        # TODO: implement
-        best_action = None
-        
+        assert self.type == decision_node
 
+        tried_actions = self.children.keys()
+        all_actions = agent.generate_all_actions()
+        untried_actions = list(set(all_actions) - set(tried_actions))
+
+        if untried_actions:  # If there are untried actions
+            action = random.choice(untried_actions) # choose a random untried action
+            self.children[action] = MonteCarloSearchNode(chance_node) # add it as a new MCTS node
+            return action # return this action
+        # end if
+
+        assert len(untried_actions) == 0, "All children should have been visited."
+
+        # No untried actions. Use UCB to find the best action.
+        action_ucb = {}
+        reward_range = agent.range_of_reward()
+        for action in all_actions:
+            child = self.children[action]
+            action_ucb[action] = (child.mean / (horizon * reward_range)
+                + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
+        # end for
+
+        # now pick the action with the highest UCD score.
+        best_action = max(action_ucb, key=action_ucb.get)
         return best_action
     # end def
+
 # end class
+
+
+def mcts_planning(agent, horizon, iterations):
+    """ Run the ρUCT planning algorithm for a given number of iterations with a
+        given horizon distance, and return the best action found.
+
+        - `agent`: the agent doing the sampling
+        - `horizon`: how many cycles into the future to sample
+        - `iterations`: how many samples to take
+    """
+    print("START MCTS\n(.) is chance node ; (*) is decision node ; (/\) is a rollout \n=========================")
+    mc_tree = MonteCarloSearchNode(decision_node)
+    mc_tree.sample_iterations(agent, horizon, iterations)
+    return mc_tree.select_action(agent, horizon)
+# end def

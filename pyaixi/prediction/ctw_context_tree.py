@@ -137,8 +137,13 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
-
-        return None
+        
+        a = self.symbol_count[0]
+        b = self.symbol_count[1]
+        numerator  = b if symbol else a
+        log_Pr_kt = math.log((numerator + 0.5)/(a + b + 1))
+        
+        return log_Pr_kt
     # end def
 
     def revert(self, symbol):
@@ -150,6 +155,13 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        symbol = int(symbol)
+        
+        self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
+                        
+        self.log_kt -= self.log_kt_multiplier(symbol)
+        
+        self.update_log_probability()
     # end def
 
     def size(self):
@@ -168,6 +180,16 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        
+        # The log turns the multiple to plus, and our approach is updating the whole tree from leaf to root
+        
+        symbol = int(symbol)
+        
+        self.log_kt+=self.log_kt_multiplier(symbol)
+        
+        self.update_log_probability()
+        
+        self.symbol_count[symbol]+=1
     # end def
 
     def update_log_probability(self):
@@ -206,6 +228,17 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        if self.is_leaf_node():
+            
+            self.log_probability = self.log_kt
+            
+        else:
+            children = sum([subnode.log_probability for _,subnode in self.children.items()])
+            # a > b -> smallest exp(log(b) - log(a))
+            a,b = sorted([self.log_kt,children],reverse = True)
+            self.log_probability = log_half + a + math.log(1 + math.exp(b-a))
+                
+    
     # end def
 
     def visits(self):
@@ -216,7 +249,14 @@ class CTWContextTreeNode:
         return self.symbol_count[0] + self.symbol_count[1]
     # end def
 # end class
-
+    
+    
+class CTWContextTree_Undo:
+    
+    def __init__(self, tree):
+        
+        for field,value in tree.__dict__.items():
+            exec("self.field = value")
 
 class CTWContextTree:
     """ The high-level interface to an action-conditional context tree.
@@ -273,7 +313,30 @@ class CTWContextTree:
 
         # The size of this tree.
         self.tree_size = 1
+        
+        #whether to trade the computation power with storage
+        self.trade_off = False
+    
     # end def
+    
+    def set_tade_off(self,value):
+        '''
+        set the trade off between computation power and storage
+        
+        '''
+        
+        assert isinstance(value,bool),"invalid settings"
+        
+        self.trade_off = value
+        
+    def model_revert(self,undo_ctw):
+        '''
+        revert model to previous state
+        
+        '''
+        
+        for field,value in undo_ctw.__dict__.items():
+            exec("self.field = value")
 
     def clear(self):
         """ Clears the entire context tree including all nodes and history.
@@ -297,11 +360,34 @@ class CTWContextTree:
 
             - `symbol_count`: the number of symbols to generate.
         """
-        symbol_list = self.generate_random_symbols_and_update(symbol_list, symbol_count)
+        symbol_list = self.generate_random_symbols_and_update(symbol_count)
         self.revert(symbol_count)
 
         return symbol_list
     # end def
+    
+    def generate_random_actions(self,action_binary):
+        
+        '''
+            selection the actions according to their likelihood
+            - 'action_binary': [[]] : the list of binary representations of actons
+        '''
+        
+        probabilities = []
+        
+        for action in action_binary:
+            
+            p = self.predict(action)
+            
+            probabilities.append(p)
+            
+        index = random.choices(range(len(action_binary)),weights = probabilities,k=1)[0]
+        
+        action = action_binary[index]
+        
+        return action
+        
+        
 
     def generate_random_symbols_and_update(self, symbol_count):
         """ Returns a specified number of random symbols distributed according to
@@ -312,8 +398,23 @@ class CTWContextTree:
         """
 
         # TODO: implement
-
-        return None
+        
+        sample =""
+        
+        for index in range(symbol_count):
+            
+            # The theory is same as the Discrete Probability Mass Function
+            # if we sample infinite bits at a particular history
+            # Then the lim t->inf 1s/0s = self.predict(1) / self.predict(0),
+            # as we choose the threshold from uniform distribution.
+            
+            bit = 1 if self.predict(1) >= random.random() else 0
+            
+            sample+= str(bit)
+            
+            self.update([bit])
+        
+        return list(sample)
     # end def
 
     def predict(self, symbol_list):
@@ -331,8 +432,43 @@ class CTWContextTree:
         """
 
         # TODO: implement
-
-        return None
+        if isinstance(symbol_list,int):
+            
+            symbol_list = [symbol_list]
+            
+        else:
+            
+            symbol_list = list(symbol_list)
+                               
+        # As we are doing depth-th order Markov model, 
+        # The history length at least bigger than the depth 
+        # then calculate log uniform probability 
+        
+        if len(symbol_list) + len(self.history)  < self.depth + 1:
+            
+            return math.log(math.pow(0.5,len(symbol_list)))
+        
+        h  = self.root.log_probability
+        
+        if self.trade_off:
+            undo_ctw = CTWContextTree_Undo(self)
+        self.update(symbol_list)
+        hy = self.root.log_probability
+        
+        if self.trade_off:
+            
+            self.model_revert(undo_ctw)
+            
+        else:
+            
+            self.revert(len(symbol_list))
+        
+        # log a - log b = log (a/b)
+        # exp**(log a - log b) = a/b
+        # transfer the log back
+        p = math.exp(hy - h)
+        
+        return p
     # end def
 
     def revert(self, symbol_count = 1):
@@ -340,8 +476,24 @@ class CTWContextTree:
      
             - `num_symbols`: the number of updates (symbols) to revert. (Default of 1.)
         """
-
         # TODO: implement
+        
+        assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
+            
+         
+        for step in range(symbol_count):
+            
+            bit = self.history[-1]
+            
+            self.history = self.history[:-1]
+            
+            self.update_context()
+            
+            for node in reversed(self.context):
+                
+                node.revert(bit)
+                
+        self.tree_size = self.root.size()
     # end def
 
     def revert_history(self, symbol_count = 1):
@@ -373,6 +525,37 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        if isinstance(symbol_list,int):
+            
+            symbol_list = [symbol_list]
+            
+        else:
+            
+            symbol_list = list(symbol_list)
+        
+        for bit in symbol_list:
+            
+            bit = int(bit)
+            
+            #cannot update context if the history is too short
+            #As the depth is represents k-th order Markov model
+            #Thus, at least len(k) history in the context
+            
+            if len(self.history) < self.depth :
+                
+                self.update_history(bit)
+                
+                continue
+            
+            self.update_context()
+            
+            for node in reversed(self.context):
+                
+                node.update(bit)
+                
+            self.update_history(bit)
+        
+            
     # end def
 
     def update_context(self):
@@ -386,6 +569,46 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        
+        '''
+        R for root, C for Children , b for new bit
+        eg: depth 3, history 110001b
+                               CCCR 
+                                
+        b is the context of 1, 01, 001,
+        as context is considered from tree leaf to node
+        
+        '''
+        
+        context = [self.root]
+        last_node = self.root
+        
+        for bit in reversed(self.history[-self.depth:]):
+            
+            # if value is 1, go left branch, otherwise right branch
+            index = 1 if bit else 0
+            
+                
+            if index in context[-1].children:
+                
+                context.append(context[-1].children[index])
+                
+            else:
+                node =CTWContextTreeNode(self)
+                
+                last_node.children[index] = node
+                
+                #update last node in the context list, as we create new child.
+                context[-1] = last_node
+                
+                context.append(context[-1].children[index])
+                
+            last_node = context[-1]
+                    
+        self.context = context
+        
+        self.tree_size = self.root.size()
+        
     # end def
 
     def update_history(self, symbol_list):

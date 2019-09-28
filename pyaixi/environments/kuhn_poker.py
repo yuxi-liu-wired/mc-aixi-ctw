@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Defines an environment for a biased coin flip.
+Created on Sat Sep 28 00:51:07 2019
+
+@author: jiayanliu
 """
 
 from __future__ import division
@@ -21,25 +23,34 @@ from pyaixi import environment, util
 
 # Defines an enumeration to represent agent action: a prediction of whether the coin will land on
 # heads or tails.
-coin_flip_action_enum = util.enum('aTails', 'aHeads')
+kp_action_enum = util.enum('pas', 'bet')
 
 # Defines an enumeration to represent agent observation: whether the coin landed on heads or tails.
-coin_flip_observation_enum = util.enum('oTails', 'oHeads')
+kp_card_observation_enum = util.enum(j=0, q=1, k=2)
+kp_opponent_observation_enum = util.enum(opBet=3, opPass=4)
 
 # Defines an enumeration to represent agent reward: whether the gaent predicted correctly.
-coin_flip_reward_enum = util.enum('rLose', 'rWin')
+kp_bet_reward_enum = util.enum(betWin = 0, betLoss = 1)
+kp_pass_reward_enum = util.enum(pasWin = 2, pasLoss = 3)
 
 # Defines some shorthand notation for ease of reference.
-aHeads = coin_flip_action_enum.aHeads
-aTails = coin_flip_action_enum.aTails
+pas = kp_action_enum.pas
+bet = kp_action_enum.bet
 
-oHeads = coin_flip_observation_enum.oHeads
-oTails = coin_flip_observation_enum.oTails
+j = kp_card_observation_enum.j
+q = kp_card_observation_enum.q
+k = kp_card_observation_enum.k
+opBet = kp_opponent_observation_enum.opBet
+opPass = kp_opponent_observation_enum.opPass
 
-rLose = coin_flip_reward_enum.rLose
-rWin = coin_flip_reward_enum.rWin
+betWin = kp_bet_reward_enum.betWin
+betLoss = kp_bet_reward_enum.betLoss
+pasWin = kp_pass_reward_enum.pasWin
+pasLoss = kp_pass_reward_enum.pasLoss
 
-class CoinFlip(environment.Environment):
+card_list = [j,q,k]
+
+class KuhnPoker(environment.Environment):
     """ A biased coin is flipped and the agent is tasked with predicting how it
         will land. The agent receives a reward of `rWin` for a correct
         prediction and `rLoss` for an incorrect prediction. The observation
@@ -82,28 +93,35 @@ class CoinFlip(environment.Environment):
         environment.Environment.__init__(self, options = options)
 
         # Defines the acceptable action values.
-        self.valid_actions = list(coin_flip_action_enum.keys())
+        self.valid_actions = list(kp_action_enum.keys())
 
         # Defines the acceptable observation values.
-        self.valid_observations = list(coin_flip_observation_enum.keys())
+        self.valid_observations = list(kp_card_observation_enum.keys())+list(kp_opponent_observation_enum.keys())
 
         # Defines the acceptable reward values.
-        self.valid_rewards = list(coin_flip_reward_enum.keys())
+        self.valid_rewards = list(kp_bet_reward_enum.keys())+list(kp_pass_reward_enum.keys())
 
-        # Determine the probability of the coin landing on heads.
-        if 'coin-flip-p' not in options:
-            options["coin-flip-p"] = self.default_probability
-        # end if
-        self.probability = float(options["coin-flip-p"])
-
-        # Make sure the probability value is valid.
-        assert 0.0 <= self.probability and self.probability <= 1.0
 
         # Set an initial percept.
-        self.observation = oHeads if random.random() < self.probability else oTails
         self.reward = 0
+        self.agent_card = util.choice(card_list)
+        self.op_card = util.choice([x for x in card_list if x != self.agent_card])
+        if self.op_card == j:
+            self.op_action = pas
+        elif self.op_card == q:
+            self.op_action = pas
+        else:
+            self.op_action = bet
+        
+        #Question: does opponent always go first?
+        self.observation = self.calculate_observation()
     # end def
-
+    def calculate_observation(self):
+        if self.op_action == pas:
+            observation = opPass
+        else:
+            observation = opBet
+        return observation + self.agent_card
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
@@ -113,32 +131,30 @@ class CoinFlip(environment.Environment):
         # Save the action.
         self.action = action
 
-        # Flip the coin, set observation and reward appropriately.
-        if (random.random() < self.probability):
-            observation = oHeads
-            reward = rWin if action == oHeads else rLose
+        if self.action == bet and self.op_action == bet:
+            if (self.op_card == j) or (self.op_card == q and self.agent_card == k):
+                self.reward = betWin
+            else:
+                self.reward = betLoss
+        elif self.action == pas:
+            self.reward = pasLoss
         else:
-            observation = oTails
-            reward = rWin if action == oTails else rLose
-        # end if
+            self.reward = pasWin
+        
+        return self.observation, self.reward
 
-        # Store the observation and reward in the environment.
-        self.observation = observation
-        self.reward = reward
-
-        return (observation, reward)
     # end def
 
     def print(self):
         """ Returns a string indicating the status of the environment.
         """
 
-        message = "prediction: " + \
-                  ("tails" if self.action == aTails else "heads") + \
-                  ", observation: " + \
-                  ("tails" if self.observation == oTails else "heads") + \
-                  ", reward: %d" % self.reward
-
-        return message
+        print("==" * 20)
+        print(f"Reward :{self.reward}")
+        print(f"Agent Actions :{kp_action_enum[self.action]}")
+        print(f"Opponent Actions :{kp_action_enum[self.op_action]}")
+        print(f"Agent has card : {kp_card_observation_enum[self.agent_card]}")
+        print(f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
+        print(self)
     # end def
 # end class

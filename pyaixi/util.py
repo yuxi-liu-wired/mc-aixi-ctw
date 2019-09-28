@@ -67,7 +67,6 @@ def encode(integer_symbol, bit_count):
         - `integer_symbol` - the integer value to be encoded.
         - `bit_count` - the number of bits from the end of the symbol list to decode.
     """
-
     assert type(integer_symbol) == int and integer_symbol >= 0, "The given symbol must be an integer greater than or equal to zero."
 
     # Convert the symbol into a bit string.
@@ -88,8 +87,7 @@ def encode(integer_symbol, bit_count):
                (bit_count, bits_length)
 
     # Calculate how many bits we need to pad the bit string with, if any, and pad with zeros.
-    pad_list = [0 for i in xrange(0, bits_length - bit_count)]
-
+    pad_list = [0 for i in xrange(0, bit_count - bits_length)]
     # Return the newly created bit list, with the zero padding first.
     symbol_list = pad_list + bits
     return symbol_list
