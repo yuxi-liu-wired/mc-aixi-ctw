@@ -78,7 +78,19 @@ class CheeseMaze(environment.Environment):
     		self.is_finished = True
     	return True
 
+    
+    def print(self):
+        """ Returns a string indicating the status of the environment.
+        """
 
+        message = "Action: " + \
+                  (self.action) + \
+                  ", observation: " + \
+                  self.observation + \
+                  ", reward: %d" % self.reward
+
+        return message
+    	
 
 
 
