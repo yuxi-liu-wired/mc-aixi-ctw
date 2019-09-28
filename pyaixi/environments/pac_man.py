@@ -14,6 +14,10 @@ import random
 import sys
 import numpy as np
 
+# Insert the package's parent directory into the system search path, so that this package can be
+# imported when the aixi.py script is run directly from a release archive.
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
+sys.path.insert(0, PROJECT_ROOT)
 from pyaixi import environment, util
 
 default_probability = 0.5
