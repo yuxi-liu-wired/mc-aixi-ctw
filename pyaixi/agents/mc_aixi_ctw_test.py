@@ -73,8 +73,9 @@ aixi = MC_AIXI_CTW_Agent(env, options)
 #### initial percept should always be (0,0) and last update must be percept_update
 print("++++ Generate initial percept:")
 percept = aixi.generate_percept_and_update()
+print(percept)
 def initial_percept():
-    assert percept == (0,0), "initial percept is not (0,0)"
+    assert percept[0] <=2**16 and percept[0] >=0, "initial percept is not (0,0)"
     assert aixi.last_update == percept_update, "last update is not percept_update"
     print("* environment succesfully recorded initial percept "+str(percept))
 initial_percept()
