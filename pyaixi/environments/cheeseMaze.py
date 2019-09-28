@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -13,6 +15,8 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
+layout = "cheeseMaze.txt"
+
 mouse_action_list = util.enum('up','down','left','right')
 #                                       5      7      8      9     10     12
 mouse_valid_observations = util.enum('5','7','8','9','10','12')
@@ -27,8 +31,17 @@ direction = {
 
 def readMazeFile():
 	maze = []
-	f = open("cheeseMaze.txt","r")
-	row = 0;
+	cwd = os.getcwd()
+
+	if "pyaixi" in cwd:
+		tokens = cwd.split("/")
+		path   = "/".join(tokens[:tokens.index("pyaixi")]) + f"/pyaixi/environments/{layout}"
+	 
+	elif "pyaixi/environments" not in cwd:
+		path = cwd+f"/pyaixi/environments/{layout}"
+	else:
+		path = layout
+	f = open(path)
 	for line in f.readlines():
 		maze.append(line[:-1].split(','))
 
@@ -51,6 +64,8 @@ class CheeseMaze(environment.Environment):
 		self.cheese = (3,3)
 		self.valid_rewards = range(2**5)
 		self.valid_actions = list(mouse_action_list.keys())
+		self.valid_observations = list(mouse_valid_observations.keys())
+		self.reward = 16
 
 
 	def perform_action(self, action):
