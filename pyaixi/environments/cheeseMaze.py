@@ -60,7 +60,7 @@ class CheeseMaze(environment.Environment):
 	def __init__(self, options = {}):
 		environment.Environment.__init__(self, options = options)
 		self.maze = readMazeFile()
-		self.mouse = (1,1)
+		self.mouse = (1,2)
 		self.cheese = (3,3)
 		self.valid_rewards = range(2**5)
 		self.valid_actions = list(mouse_action_list.keys())
