@@ -20,8 +20,11 @@ PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 from pyaixi import environment, util
 
+#specify the map of pacman, and the probability to generate the pellets
 default_probability = 0.5
 layout_txt = "pacMan.txt"
+
+#Define the enumerations to represents the observations and actions
 pacman_action_enum = util.enum('top', 'down', 'left', 'right')
 pacman_wall_observations_enum = util.enum(wNull = 0, wTopWall = 1,wDownWall = 2,
                                                  wLeftWall = 4, wRightWall = 8)
@@ -34,7 +37,7 @@ pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 2048, oDown = 4096,
                                                   sLeft = 8192, sRight = 16384)
 pacman_power_observation_enum = util.enum(withouEffect = 0, underEffect = 32768)
 
-
+#Predefined dictionary to help us perform the actions 
 direction = {
         '0':[1,0], #top
         '1':[-1,0], #down
@@ -47,17 +50,94 @@ direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
 
 
 class PacMan(environment.Environment):
+        
+    ''' Pacman
+
+            For the user defined layout, the rules must be followed
+            P stands for pacman
+            the rest of alphabeta stands for monster
+            % stands for wall
+            (x,y) - (x_1,y_1) denotes the equivalence of two location. Typlically composed by one invalid location
+            and one valid locations.
+            
+        Attributes
+        ----------
+        
+        rows : int, default 0
+            denotes the number of rows in the layout
+        
+        cols : int, default 0
+            denotes the number of columns in the layout
+               
+        magic_channel : dict()
+            used to store the two equivalent locations, typically composed by one invalid location (x,y),
+            and one valid loation x_1,y_1,such as 
+            magic_channel[x,y] = [x_1,y_1]
+               
+        max_rewards : int
+            denotes the maximum number of rewards the agent could earn
+               
+        pellets_remaining : int, default 0
+            denotes the number of pellets remain on the map
+               
+        max_observation : int, default 2**16.
+            deonotes the largest obersvation value
+                
+        layout : [[]]
+            denotes the game map
+                
+        monster : dict()
+            used to store the current location of monster.
+            The key is name of monster, and the value is location of monster
+        
+        power_pill : []
+            used to store the location of remaining power pill on the map.
+                
+        pacman : [a,b]  a,b belongs to N
+            used to store the current location of pacman
+                
+        reward : int, default 0
+            denotes the number the number of scores that our agent has been earned. The minimum
+            value will be 0    
+            
+        is_finished : bool, default False
+            used to denote whether the enviroments is finished or not.
+            
+        super_pacman : bool, default False
+            used to denote whether the pacman is under the effect of power pill.
+            
+        super_pacman_time: int, default 0
+            used to denote the remaining time under the effect of power pill.
+            
+        valid_rewards : range
+            used to store the valid rewards
+        
+        valid_actions: []
+            used to store all valid actions
+            
+        valid_observations: range
+            used to store the potential valid observations
+            
+        observations : int
+            the code for current obervations of pacman
+            
+        actions: int
+            the code for action the pacman just taken.
+            
+        foragent: bool defualt True
+            When it is true, it will automatically comeup with the setups for agents.
+            When it is false, we can have the actual pacman to play.
+        
+    '''
     
     
-    def __init__(self,options = {}):
+    def __init__(self,options = {}): 
         
         '''
-        P stands for pacman
-        the rest of alphabeta stands for monster
-        % stands for wall
-        * stands for pellets
+            initialize the setup for our pacman
         
         '''
+        
         self.rows = 0
         self.cols = 0
         self.magic_channel = dict()
@@ -86,6 +166,23 @@ class PacMan(environment.Environment):
      
     def random_pellets(self,x):
         
+        
+        """ generate pellet according to the defualt probability
+            if the current location is not wall ("%"), then there has
+            certain chance to having a pellet.
+       
+        Parameters
+        ----------
+        x : string
+            the symbol of a location on map.
+      
+        Returns
+        -------
+        string  "*" or x
+            "*" denote the pellet
+        
+        """        
+        
         if x == ' ' and default_probability > random.random():
             
             self.max_reward += 1
@@ -98,20 +195,26 @@ class PacMan(environment.Environment):
         
     def load(self,layout):
         
+        """ 
+            loading the user defined layout of map, and 
+            generate the pellets. And setting the number of 
+            rows and columns to the attribute
+       
+        Parameters
+        ----------
+        layout : string
+            the name of file that contains the map
+      
+        Returns
+        -------
+        pacMan_map : [[]]
+            the list of list representation of the map 
+        
+        """          
+        
         pacMan_map = []
-        
-        import os
-        cwd = os.getcwd()
-        
-        if "pyaixi" in cwd:
-            tokens = cwd.split("/")
-            path   = "/".join(tokens[:tokens.index("pyaixi")]) + f"/pyaixi/environments/{layout}"
-         
-        elif "pyaixi/environments" not in cwd:
-            path = cwd+f"/pyaixi/environments/{layout}"
-            
-        else:
-            path = layout
+        sep = '/' if '/' in PROJECT_ROOT else ''''\''''
+        path = PROJECT_ROOT + f"{sep}pyaixi{sep}environments{sep}" + layout
             
         with open(path) as f:
             lines = f.readlines()
@@ -134,6 +237,26 @@ class PacMan(environment.Environment):
     
     
     def find_Positions(self):
+        
+        """ 
+            collecting the location information of 
+            monster and power pill, and preprocessing the
+            map. In order to, only keep the walls and
+            pellet on the concrete reprensentation of map.
+            For the sake of performing action and movement
+            of monster.
+            
+            Also, calculating the maximum rewards.
+       
+        Parameters
+        ----------
+        None
+      
+        Returns
+        -------
+        None
+        
+        """     
         
         row = 0
         
@@ -164,11 +287,40 @@ class PacMan(environment.Environment):
             x,y = positon
             self.layout[x][y] = " "
             
-        self.max_reward = self.max_reward * 10 + len(self.power_pill) * 100 * 30
+        self.max_reward = self.max_reward * 10 + len(self.power_pill) * 100 * 30 + 100
             
                           
     def perform_action(self, action):
+
+        """ 
+            Perform the actions to pacman. Then, update the map,update the rewards 
+            and obersvations accordingly.
+            If the foragent attribute is true, we also perform the movement
+            of monster.
+            The caculation of rewards follow the rules below,
+                1.The agent receives a penalty of 1 for each movement action
+                2.a penalty of 10 for running into a wall, and agenet will stay
+                  on the original position
+                3.a reward of 10 for each food pellet eaten
+                4.a penalty of 50 if it is caught by a ghost
+                5.a reward of 100 for collecting all the food
+                6.a reward of 10 for eating power pill.
+                7.eating a ghost while on a power pill effect gives a reward of 30,
+                  also reset the position of ghost
+        Parameters
+        ----------
+        action : string
+            the code for the actions
+      
+        Returns
+        -------
+        reward : int
+            the current reward for pacman
+        observation: int
+            the current obervations for pacman
+        """     
         
+        # if it is foragent, then we perform the movement for monster
         if self.foragent:
             self.movement_monster()
         
@@ -176,12 +328,19 @@ class PacMan(environment.Environment):
         
         self.reward -= 1
         
-        if self.pellets_remaining == 0:
+        # if all pellets are eaten
+        # then we restart the game automatically
+        if self.pellets_remaining == 0 and self.foragent:
             
             self.layout = self.load(layout_txt) 
+            self.find_Positions()
+            self.super_pacman = False
+            self.super_pacman_time = 0
             
             return self.perform_action(action)
         
+        # calculate the postion of pacman based  on current location
+        # and action
         movement = direction[str(action)]
         
         old_x,old_y = self.pacman
@@ -190,6 +349,8 @@ class PacMan(environment.Environment):
         self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
         
         x,y = self.pacman
+        
+        #check if the pacman are transposed through magic channel
         if (x,y) in self.magic_channel:
             self.pacman = self.magic_channel[x,y]
             x,y = self.pacman
@@ -199,10 +360,13 @@ class PacMan(environment.Environment):
             
             self.reward += 10
             self.layout[x][y] = " "
+            self.pellets_remaining -= 1
         
         elif on_map == "%":
             
             self.reward -= 10
+            # if packman is going into the wall
+            # keep the old location
             self.pacman = [old_x,old_y]
             
             
@@ -211,9 +375,14 @@ class PacMan(environment.Environment):
             if [x,y] in self.monster.values():
                             
                 if self.super_pacman:
-                
+                    
+                    # if the monster is eaten by the pacman
+                    # reset it is location by generate random number
+                    # also, no monster are in the same location
+                    
                     self.reward += 30
                     
+                    #find out the monster eaten by the pacman
                     for name, location in self.monster:
                         
                         if location == [x,y]:
@@ -240,7 +409,7 @@ class PacMan(environment.Environment):
                 
                 self.reward+=10
                 self.super_pacman = True
-                self.super_pacman_time += 100
+                self.super_pacman_time = 100
                 self.layout[x][y] = " "
                 self.power_pill.remove([x,y])
                                                                         
@@ -252,8 +421,12 @@ class PacMan(environment.Environment):
             
             self.super_pacman = False
             
+        if self.pellets_remaining == 0:
+            self.reward += 100
+            
         self.reward = max(self.reward,0)
-                
+        
+        #calculate the obervations
         self.observation = self.calculate_observation()
         
         return self.reward, self.observation
@@ -261,19 +434,31 @@ class PacMan(environment.Environment):
     def calculate_observation(self):
         
         '''
-        only receives a 4-bit observation describing the wall configuration at 
-        its current location.
+        The observations are calculate according to the rules blow
         
-        only 4-bit observations indicating whether a ghost is visible (via direct line of sight) 
-        in each of the four cardinal directions. 
+            1.only receives a 4-bit observation describing the wall configuration at 
+            its current location.
         
-        In addition, the location of the food pellets is unknown except for a 3-bit observation that
-        indicates whether food can be smelt within a Manhattan distance of 2, 3 or 4 
-        from PacMan’s location, 
+            2.only 4-bit observations indicating whether a ghost is visible (via direct line of sight) 
+            in each of the four cardinal directions. 
         
-        and another 4-bit observation indicating whether there is food in its direct line of sight. 
+            3.In addition, the location of the food pellets is unknown except for a 3-bit observation that
+            indicates whether food can be smelt within a Manhattan distance of 2, 3 or 4 
+            from PacMan’s location, 
         
-        A final single bit indicates whether PacMan is under the effects of a power pill.
+            4. another 4-bit observation indicating whether there is food in its direct line of sight. 
+        
+            5. final single bit indicates whether PacMan is under the effects of a power pill.
+            
+        Then we can calculate the oberserbations using the enumerations we defined before
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
         
         '''
                 
@@ -281,9 +466,13 @@ class PacMan(environment.Environment):
         
         p_x, p_y = self.pacman
         
+        # using numpy arrarys are benefits in different ways 
+        # of indexing
         layout = np.array(self.layout)
         shadow_layout = np.array(self.layout)
         
+        
+        #calculate the obervations for wall
         for key,l in direction.items():
             x,y = l
             new_x,new_y = p_x+x,p_y+y
@@ -293,8 +482,11 @@ class PacMan(environment.Environment):
                 new_x,new_y = self.magic_channel[new_x,new_y]
             
             if self.layout[new_x][new_y] == "%":
-                
+                # the relation of them 2**?, because of the the mathmatical
+                # coincidence
                 observation += 2**(int(key))
+                
+        #calculate the obervations for monster    
         
         for name,l in self.monster.items():
             x,y = l
@@ -316,7 +508,7 @@ class PacMan(environment.Environment):
             #right
             observation+= pacman_ghost_observation_enum.gRightWall
         
-                
+        #calculate the observations for pellets in smelling.        
         distance = [2,3,4]
         
         smelles = set()
@@ -334,6 +526,8 @@ class PacMan(environment.Environment):
         for d in smelles:
             
             observation+=2**(d+smell_constant)
+            
+        #calculate the observations for pellets in sight.
                             
         if '*' in layout[x,y+1:]:
             #top
@@ -350,7 +544,8 @@ class PacMan(environment.Environment):
         if '*' in layout[x+1:,y]:
             #right
             observation+= pacman_sight_observation_enum.sRight
-            
+        
+        #calculate the observations of power pill effect.
         if self.super_pacman:
             
             observation += pacman_power_observation_enum.underEffect
@@ -363,12 +558,30 @@ class PacMan(environment.Environment):
         
     def movement_monster(self):
         
+        ''' Perform the monster movements. And
+            the movements of monsters follow the rules below
+                1.They move initially at random, until there is a Manhattan 
+                distance of 5 between them and PacMan
+                
+                2. No pairs of monster could stay in the same location
+        
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None        
+        
+        '''
+        
         p_x,p_y = self.pacman
         
         for name,position in self.monster.items():
             
             x,y = position
             
+            # calculate the Manhattan distance between pacman and the current monster
             distance = abs(p_x - x) + abs(p_y - y)
             
             if  distance > 5:
@@ -379,7 +592,13 @@ class PacMan(environment.Environment):
                 coordinates = list(self.monster.values())
                 coordinates.remove([x,y])
                 
+                #can not move the locations of other monster
                 while self.layout[new_x][new_y] == "%" and [new_x,new_y] not in coordinates:
+                    
+                    # perform random actions
+                    # also, the monster has certain chance 
+                    # that stay in the orginal 
+                    # postion
                     
                     index = random.choices(range(5))[0]
                     
@@ -400,8 +619,11 @@ class PacMan(environment.Environment):
                 
             else:
                 
+                # move towards the pacman
+                
                 valid_actions = []
                 
+                #consider all of the possible movements
                 for m_x,m_y in direction_list:
                     
                     new_x = x+m_x
@@ -416,24 +638,59 @@ class PacMan(environment.Environment):
                         valid_actions.append([[new_x,new_y],abs(p_x - new_x) + abs(p_y - new_y)])
                         
                         
-                    
+                # if no movement is avalible
+                # stay in the orginal postion
                 if valid_actions == []:
                     
                     continue
-                        
+                
+                # when the pacman is under the power pill,
+                # monster move as far as possible.
+                # If it is not,
+                # the monster move as close as possible.
+                
                 fun = max if self.super_pacman else min
                 
                 self.monster[name] = fun(valid_actions,key = lambda x : x[1])[0]
     
     def print(self):
+        
+        ''' print the interface 
+        
+        
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None    
+        
+        '''
+        
         print("==" * 20)
         print(f"Reward :{self.reward}")
         print(f"Super Pacman remainng time {self.super_pacman_time}")
         print(f"Observation : {self.observation}")
+        print(f"Pellets remaining :{self.pellets_remaining}")
         print(self)
              
                 
     def __str__(self):
+        
+        ''' the string reprentation for the class.
+        
+        
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None    
+        
+        '''        
+        
         
         from copy import deepcopy   
         
@@ -462,7 +719,28 @@ class PacMan(environment.Environment):
         return output
                 
     def running(self):
+        
+        '''  Not used by agent.
+             Designed for debugging purpose.
             
+             a = Pacman()
+             a.running()
+             
+             Then we can have the actual interactive with the game
+        
+        
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None    
+        
+        '''  
+        
+            
+        self.foragent = False
             
         while not self.is_finished:
                 
