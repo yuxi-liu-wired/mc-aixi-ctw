@@ -14,6 +14,10 @@ import random
 import sys
 import numpy as np
 
+# Insert the package's parent directory into the system search path, so that this package can be
+# imported when the aixi.py script is run directly from a release archive.
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
+sys.path.insert(0, PROJECT_ROOT)
 from pyaixi import environment, util
 
 default_probability = 0.5
@@ -56,16 +60,17 @@ class PacMan(environment.Environment):
         '''
         self.rows = 0
         self.cols = 0
+        self.magic_channel = dict()
         self.max_reward = 0
         self.pellets_remaining = 0
         self.max_observation = 2**16
         self.layout = self.load(layout_txt)
         self.monster = dict()
-        self.monster_names = set(self.monster.keys())
         self.power_pill = []
         self.pacman = None
         self.find_Positions()
         self.reward = 0
+        self.monster_names = set(self.monster.keys())
         self.is_finished = False
         self.super_pacman = False
         self.super_pacman_time = 0
@@ -111,8 +116,15 @@ class PacMan(environment.Environment):
         with open(path) as f:
             lines = f.readlines()
             for line in lines:
-                line = line.strip()
+                if "!" in line:
+                    a,b = line.strip().split("!")
+                    a = eval(a)
+                    b = eval(b)
+                    self.magic_channel[a] = b
+                    continue
+                    
                 line = list(map(self.random_pellets,line))
+                line.remove("\n")
                 self.pellets_remaining += line.count("*")
                 pacMan_map.append(line) 
         
@@ -174,10 +186,13 @@ class PacMan(environment.Environment):
         
         old_x,old_y = self.pacman
         self.layout[old_x][old_y] = " "
+        
         self.pacman = [self.pacman[0] + movement[0],self.pacman[1] + movement[1]]
         
         x,y = self.pacman
-        
+        if (x,y) in self.magic_channel:
+            self.pacman = self.magic_channel[x,y]
+            x,y = self.pacman
         on_map = self.layout[x][y]
         
         if on_map == "*":
@@ -271,8 +286,13 @@ class PacMan(environment.Environment):
         
         for key,l in direction.items():
             x,y = l
+            new_x,new_y = p_x+x,p_y+y
             
-            if self.layout[p_x+x][p_y+y] == "%":
+            if (new_x,new_y) in self.magic_channel:
+                
+                new_x,new_y = self.magic_channel[new_x,new_y]
+            
+            if self.layout[new_x][new_y] == "%":
                 
                 observation += 2**(int(key))
         
@@ -282,19 +302,19 @@ class PacMan(environment.Environment):
             
         if self.monster_names.intersection(shadow_layout[x,y+1:]):
             #top
-            observation+= pacman_ghost_observation_enum.gTop
+            observation+= pacman_ghost_observation_enum.gTopWall
         
         if self.monster_names.intersection(shadow_layout[x,:y]):
             #down
-            observation+= pacman_ghost_observation_enum.gDown
+            observation+= pacman_ghost_observation_enum.gDownWall
             
         if self.monster_names.intersection(shadow_layout[:x,y]):
             #left
-            observation+= pacman_ghost_observation_enum.gLeft
+            observation+= pacman_ghost_observation_enum.gLeftWall
             
         if self.monster_names.intersection(shadow_layout[x+1:,y]):
             #right
-            observation+= pacman_ghost_observation_enum.gRight
+            observation+= pacman_ghost_observation_enum.gRightWall
         
                 
         distance = [2,3,4]
@@ -356,12 +376,24 @@ class PacMan(environment.Environment):
                 new_x = 0
                 new_y = 0
                 
-                while self.layout[new_x][new_y] == "%" and [new_x,new_y] not in self.monster.values():
+                coordinates = list(self.monster.values())
+                coordinates.remove([x,y])
+                
+                while self.layout[new_x][new_y] == "%" and [new_x,new_y] not in coordinates:
                     
-                    index = random.choices(range(4))[0]
-                    m_x,m_y = direction_list[index]
-                    new_x = x+m_x
-                    new_y = y+m_y
+                    index = random.choices(range(5))[0]
+                    
+                    if index == 4:
+                        new_x = x
+                        new_y = y
+                    else:
+                        m_x,m_y = direction_list[index]
+                        new_x = x+m_x
+                        new_y = y+m_y
+                    
+                    if (new_x,new_y) in self.magic_channel:
+            
+                        new_x,new_y = self.magic_channel[new_x,new_y]
                 
                 
                 self.monster[name] = [new_x,new_y]
@@ -375,10 +407,20 @@ class PacMan(environment.Environment):
                     new_x = x+m_x
                     new_y = y+m_y
                     
-                    if self.layout[new_x][new_y] != "%":
+                    if (new_x,new_y) in self.magic_channel:
+            
+                        new_x,new_y = self.magic_channel[new_x,new_y]
+                    
+                    if self.layout[new_x][new_y] != "%"  and [new_x,new_y] not in self.monster.values():
                         
                         valid_actions.append([[new_x,new_y],abs(p_x - new_x) + abs(p_y - new_y)])
-                
+                        
+                        
+                    
+                if valid_actions == []:
+                    
+                    continue
+                        
                 fun = max if self.super_pacman else min
                 
                 self.monster[name] = fun(valid_actions,key = lambda x : x[1])[0]
