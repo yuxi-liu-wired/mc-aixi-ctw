@@ -3,7 +3,7 @@
 """
 Created on Fri Sep 27 09:00:01 2019
 
-@author: jiayanliu
+@author: jiayanliu, Wenxi Wu
 """
 
 from __future__ import division
@@ -14,6 +14,9 @@ import os
 import random
 import sys
 import numpy as np
+
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
+sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
@@ -37,25 +40,22 @@ right = tiger_observation_enum.right
 void = tiger_observation_enum.void
 
 class ExtendedTiger(environment.Environment):
-    """ A biased coin is flipped and the agent is tasked with predicting how it
-        will land. The agent receives a reward of `rWin` for a correct
-        prediction and `rLoss` for an incorrect prediction. The observation
-        specifies which side the coin landed on (`oTails` or `oHeads`).
-        The action corresponds to the agent's prediction for the
-        next coin flip (`aTails` or `aHeads`).
+    """ 
+        extended tiger position prediction, a tiger behind in a door, player 
+        is asking to open one of the door(left or right), before open either 
+        door, player is sitting on a chair, and can listen the noise made by 
+        tiger, but it has a probility of 0.85 that player get correct observation.
 
         Domain characteristics:
 
-        - environment: "coin_flip"
-        - maximum action: 1 (1 bit)
-        - maximum observation: 1 (1 bit)
-        - maximum reward: 1 (1 bit)
+        - environment: "extended_tiger"
+        - maximum action: 4 (2 bit)
+        - maximum observation: 3 (2 bit)
+        - maximum reward: 256 (8 bit)
+    """
 
-        Configuration options:
-        - `coin-flip-p`: the probability the coin lands on heads
-                         (`oHeads`). Must be a number between 0 and 1 inclusive.
-                         Default value is `default_probability`.
-                         (Optional.)
+    """
+    default ptobability of correct observation given by action listenning
     """
     default_probability = 0.85
 
@@ -67,8 +67,6 @@ class ExtendedTiger(environment.Environment):
              - `options` is a dictionary of named options and their values.
 
             The following options in `options` are optional:
-            
-             - `coin-flip-p`: the probability that the coin will land on heads. (Defaults to 0.7.)
         """
 
         # Set up the base environment.
@@ -82,7 +80,7 @@ class ExtendedTiger(environment.Environment):
         
         self.valid_rewards = range(2**8)
         # Set an initial percept.
-        self.reward = 128
+        self.reward = 128 #given initial reward with 128
         self.is_finished = False
         self.state = sitting
         self.observation = void
@@ -93,15 +91,16 @@ class ExtendedTiger(environment.Environment):
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
-
         assert self.is_valid_action(action)
         # Save the action.
         self.action = action
-        if self.state == sitting:
+        print("perform action", action)
+
+        if self.state == sitting:  
             if action == stand:
-                self.reward -= 1
+                self.reward -= 1  #perform stand, when sitting given reward -1
                 self.state = standing
-            elif action == listen:
+            elif action == listen: #perform lsiten, when sitting given reward -1
                 self.reward -= 1
                 if (random.random() <= self.default_probability):
                     self.observation = self.tiger
@@ -110,32 +109,34 @@ class ExtendedTiger(environment.Environment):
                         self.observation = right
                     else:
                         self.observation = left
-            else:
+            else: #other invalid action given reward -10
                 self.reward -= 10
         else:
-            if action == open_left:
+            if action == open_left:  
                 if self.tiger == left:
-                    self.reward -= 100
+                    self.reward -= 100 #open door with tiger when standing given reward -100
                 else:
-                    self.reward += 30
-                self.clear_start()
-                self.is_finished = True
+                    self.reward += 30  #open door with gold when standing given reward +30
+                self.clear_start()     #reset game state(position of tiger and state of player)
             elif action == open_right:
                 if self.tiger == right:
                     self.reward -= 100
                 else:
                     self.reward += 30
                 self.clear_start()
-                self.is_finished = True
             else:
                 self.reward -= 10
-        return (self.observation, self.reward)
+        if self.reward < 0:
+            self.is_finished = True
+            self.reward = 0
+        return (self.observation, max(self.reward,0))
     # end def
     def clear_start(self):
         print("Game Over! Starting New Game...")
-        self.reward = 128
+        # self.reward = 128
         self.state = sitting
         self.tiger = left if random.randint(0,1) == 1 else right
+        # self.is_finished = False
         print(f"Tiger be set at the :{self.tiger}")
         
     def print(self):
