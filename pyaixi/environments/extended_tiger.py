@@ -117,26 +117,29 @@ class ExtendedTiger(environment.Environment):
                     self.reward -= 100 #open door with tiger when standing given reward -100
                 else:
                     self.reward += 30  #open door with gold when standing given reward +30
+                tmp_reward = self.reward
+                tmp_observation = self.observation
                 self.clear_start()     #reset game state(position of tiger and state of player)
             elif action == open_right:
                 if self.tiger == right:
                     self.reward -= 100
                 else:
                     self.reward += 30
+                tmp_reward = self.reward
+                tmp_observation = self.observation
                 self.clear_start()
             else:
                 self.reward -= 10
-        if self.reward < 0:
-            self.is_finished = True
-            self.reward = 0
-        return (self.observation, max(self.reward,0))
+        if tmp_reward < 0:
+            tmp_reward = 0
+        return tmp_observation, tmp_reward
     # end def
     def clear_start(self):
         print("Game Over! Starting New Game...")
-        # self.reward = 128
+        self.reward = 128
+        self.observation = void
         self.state = sitting
         self.tiger = left if random.randint(0,1) == 1 else right
-        # self.is_finished = False
         print(f"Tiger be set at the :{self.tiger}")
         
     def print(self):
