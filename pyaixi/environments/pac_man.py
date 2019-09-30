@@ -409,7 +409,7 @@ class PacMan(environment.Environment):
                 
                 self.reward+=10
                 self.super_pacman = True
-                self.super_pacman_time = 100
+                self.super_pacman_time += 100
                 self.layout[x][y] = " "
                 self.power_pill.remove([x,y])
                                                                         
