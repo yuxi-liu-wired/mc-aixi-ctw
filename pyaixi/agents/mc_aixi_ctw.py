@@ -426,8 +426,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.set_savestate() #save current agent and env state before simulating both
 
         for i in range(horizon):
-#            if self.environment.is_finished:
-#                break
+            if self.environment.is_finished:
+                break
             # note that generate_action() generates according to the past
             # while generate_random_action() generates randomly uniformly
             self.model_update_action(self.generate_random_action())

@@ -99,6 +99,6 @@ def action_is_recorded_in_env():
     print("* environment succesfully recorded action "+str(action))
 action_is_recorded_in_env()
 
-print("* environment status:\n\t"+aixi.environment.print())
+#print("* environment status:\n\t"+aixi.environment.print())
 
 

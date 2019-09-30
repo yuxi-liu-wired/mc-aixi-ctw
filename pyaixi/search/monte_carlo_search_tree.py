@@ -111,14 +111,15 @@ class MonteCarloSearchNode:
         agent.set_savestate()
 
         if horizon == 0:
-#            print("(-)reached horizon")
+            print("(-)reached horizon")
             assert self.type == decision_node
             return 0.0
 
         elif self.type == chance_node: #Sample Percept if this is a chance_node
-#            print("(.)sample percept")
+            print("(.)sample percept")
             # sample or from ρ(or|h)
             observation, reward = agent.generate_percept_and_update()
+            print("\t-- receive obs, rwd: "+str(observation)+", "+str(reward))
             # create node hor if it is an unvisited child.
             if not (observation in self.children):
                 self.children[observation] = MonteCarloSearchNode(decision_node)
@@ -128,16 +129,16 @@ class MonteCarloSearchNode:
             reward_sum = reward + child.sample(agent, horizon - 1)
 
         elif self.visits == 0: #Rollout if decision_node hasnt been visited
-#            print("(/\)havent visited decision node before")
+            print("(/\)havent visited decision node before")
             reward_sum = agent.playout(horizon)
-#            print("\t-- rollout, got expected reward: "+str(reward_sum))
+            print("\t-- rollout, got expected reward: "+str(reward_sum))
 
         else: #Select Action if this is a decision_node
-#            print("(*)select action")
+            print("(*)select action")
             action = self.select_action(agent, horizon)
             agent.model_update_action(action)
             reward_sum = self.children[action].sample(agent, horizon)
-#            print("\t-- get reward sum: "+str(reward_sum))
+            print("\t-- get reward sum: "+str(reward_sum))
         # end if
 
         agent.restore_savestate()
@@ -177,24 +178,26 @@ class MonteCarloSearchNode:
 
         if untried_actions:  # If there are untried actions
             action = random.choice(untried_actions) # choose a random untried action
+            print("\t-- try untried action: "+str(action))
             self.children[action] = MonteCarloSearchNode(chance_node) # add it as a new MCTS node
             return action # return this action
+        
+        else: # No untried actions. Use UCB to find the best action.
+            assert len(untried_actions) == 0, "All children should have been visited."
+            
+            action_ucb = {}
+            reward_range = agent.range_of_reward()
+            for action in all_actions:
+                child = self.children[action]
+                action_ucb[action] = (child.mean / (horizon * reward_range)
+                    + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
+            # end for
+    
+            # now pick the action with the highest UCB score.
+            best_action = max(action_ucb, key=action_ucb.get)
+            print("\t -- action picked through UCB: "+str(action))
+            return best_action
         # end if
-
-        assert len(untried_actions) == 0, "All children should have been visited."
-
-        # No untried actions. Use UCB to find the best action.
-        action_ucb = {}
-        reward_range = agent.range_of_reward()
-        for action in all_actions:
-            child = self.children[action]
-            action_ucb[action] = (child.mean / (horizon * reward_range)
-                + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
-        # end for
-
-        # now pick the action with the highest UCD score.
-        best_action = max(action_ucb, key=action_ucb.get)
-        return best_action
     # end def
 
 # end class
@@ -208,7 +211,7 @@ def mcts_planning(agent, horizon, iterations):
         - `horizon`: how many cycles into the future to sample
         - `iterations`: how many samples to take
     """
-#    print("START MCTS\n(.) is chance node ; (*) is decision node ; (/\) is a rollout \n=========================")
+    print("START MCTS\n(.) is chance node ; (*) is decision node ; (/\) is a rollout \n=========================")
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
     return mc_tree.select_action(agent, horizon)
