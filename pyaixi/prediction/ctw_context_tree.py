@@ -18,6 +18,14 @@ from six.moves import xrange
 # This value is used often in computations and so is made a constant for efficiency reasons.
 log_half = math.log(0.5)
 
+'''
+I do not maintain the tree size exactly,
+because when the depth get larger.
+Calculating the tree size
+is horible.
+
+'''
+
 class CTWContextTreeNode:
     """ The CTWContextTreeNode class represents a node in an action-conditional context tree.
 
@@ -157,6 +165,7 @@ class CTWContextTreeNode:
         # TODO: implement
         symbol = int(symbol)
         
+        # the symbol count should be non-negative
         self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
                         
         self.log_kt -= self.log_kt_multiplier(symbol)
@@ -181,15 +190,17 @@ class CTWContextTreeNode:
 
         # TODO: implement
         
-        # The log turns the multiple to plus, and our approach is updating the whole tree from leaf to root
+        # The log turns the multiple to plus, 
+        # and our approach is updating the whole tree from leaf to root
         
         symbol = int(symbol)
         
         self.log_kt+=self.log_kt_multiplier(symbol)
+            
+        self.symbol_count[symbol]+=1
         
         self.update_log_probability()
         
-        self.symbol_count[symbol]+=1
     # end def
 
     def update_log_probability(self):
@@ -235,6 +246,7 @@ class CTWContextTreeNode:
         else:
             children = sum([subnode.log_probability for _,subnode in self.children.items()])
             # a > b -> smallest exp(log(b) - log(a))
+            # a should be larger than b.
             a,b = sorted([self.log_kt,children],reverse = True)
             self.log_probability = log_half + a + math.log(1 + math.exp(b-a))
                 
@@ -252,6 +264,14 @@ class CTWContextTreeNode:
     
     
 class CTWContextTree_Undo:
+    
+    '''
+    Used to store the attributes of
+    CTWContextTree, and we can revert symbols in 
+    a efficient way.That trades the computation 
+    power with storage.
+
+    '''
     
     def __init__(self, tree):
         
@@ -480,7 +500,8 @@ class CTWContextTree:
         
         assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
             
-         
+        # revert the tree in reversed order
+        # because of the dependency relationships.
         for step in range(symbol_count):
             
             bit = self.history[-1]
@@ -493,7 +514,6 @@ class CTWContextTree:
                 
                 node.revert(bit)
                 
-        self.tree_size = self.root.size()
     # end def
 
     def revert_history(self, symbol_count = 1):
@@ -548,6 +568,9 @@ class CTWContextTree:
                 continue
             
             self.update_context()
+            
+            # update the tree in reversed order,
+            # because of the dependency relationship.
             
             for node in reversed(self.context):
                 
@@ -607,7 +630,6 @@ class CTWContextTree:
                     
         self.context = context
         
-        self.tree_size = self.root.size()
         
     # end def
 
