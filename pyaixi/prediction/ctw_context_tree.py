@@ -147,8 +147,12 @@ class CTWContextTreeNode:
         # TODO: implement
         
         a = self.symbol_count[0]
+        
         b = self.symbol_count[1]
+        
+        #find out which bit is we are try to predict next, 0 or 1.
         numerator  = b if symbol else a
+        
         log_Pr_kt = math.log((numerator + 0.5)/(a + b + 1))
         
         return log_Pr_kt
@@ -167,7 +171,9 @@ class CTWContextTreeNode:
         
         # the symbol count should be non-negative
         self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
-                        
+              
+        #calculating the log probability relies on the kt estimater
+        #update the kt estimator before updating the log probability          
         self.log_kt -= self.log_kt_multiplier(symbol)
         
         self.update_log_probability()
@@ -194,6 +200,9 @@ class CTWContextTreeNode:
         # and our approach is updating the whole tree from leaf to root
         
         symbol = int(symbol)
+        
+        #updating the symbol counts before calling log_kt_multiplier
+        #will result in double count of the symbols
         
         self.log_kt+=self.log_kt_multiplier(symbol)
             
@@ -389,6 +398,8 @@ class CTWContextTree:
     def generate_random_actions(self,action_binary):
         
         '''
+            action_binary: [[]]
+            
             selection the actions according to their likelihood
             - 'action_binary': [[]] : the list of binary representations of actons
         '''
@@ -419,7 +430,7 @@ class CTWContextTree:
 
         # TODO: implement
         
-        sample =""
+        sample =[]
         
         for index in range(symbol_count):
             
@@ -428,13 +439,11 @@ class CTWContextTree:
             # Then the lim t->inf 1s/0s = self.predict(1) / self.predict(0),
             # as we choose the threshold from uniform distribution.
             
-            bit = 1 if self.predict(1) >= random.random() else 0
+            sample.append(1 if self.predict(1) >= random.random() else 0)
             
-            sample+= str(bit)
-            
-            self.update([bit])
+            self.update(sample[-1])
         
-        return list(sample)
+        return sample
     # end def
 
     def predict(self, symbol_list):
@@ -460,19 +469,34 @@ class CTWContextTree:
             
             symbol_list = list(symbol_list)
                                
-        # As we are doing depth-th order Markov model, 
-        # The history length at least bigger than the depth 
-        # then calculate log uniform probability 
-        
+        # As we are doing mixture Markov model, 
+        # the largest order is depth-th order. 
+        # The history length at least bigger than the depth.
+        # If not, we can only calculate log uniform probability.
+        # another approach could be uniformly generate the history,
+        # and doing the prediction.
+        '''
         if len(symbol_list) + len(self.history)  < self.depth + 1:
             
-            return math.log(math.pow(0.5,len(symbol_list)))
+             return math.log(math.pow(0.5,len(symbol_list)))
+        
+        '''
+        difference  = self.depth - len(self.history)
+        
+        if difference > 0:
+            
+            self.update([random.randint(0,1) for i in range(difference)])
+        
         
         h  = self.root.log_probability
         
+        #trading the storage with computation power
         if self.trade_off:
+            
             undo_ctw = CTWContextTree_Undo(self)
+            
         self.update(symbol_list)
+        
         hy = self.root.log_probability
         
         if self.trade_off:
@@ -611,20 +635,14 @@ class CTWContextTree:
             # if value is 1, go left branch, otherwise right branch
             index = 1 if bit else 0
             
+            if index not in context[-1].children:
                 
-            if index in context[-1].children:
-                
-                context.append(context[-1].children[index])
-                
-            else:
-                node =CTWContextTreeNode(self)
-                
-                last_node.children[index] = node
+                last_node.children[index] = CTWContextTreeNode(self)
                 
                 #update last node in the context list, as we create new child.
                 context[-1] = last_node
                 
-                context.append(context[-1].children[index])
+            context.append(context[-1].children[index])
                 
             last_node = context[-1]
                     
