@@ -27,6 +27,7 @@ from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
 from pyaixi.search.monte_carlo_search_tree import MonteCarloSearchNode, mcts_planning
 
+from copy import deepcopy
 
 class MC_AIXI_CTW_Undo:
     """ A class to save details from a MC-AIXI-CTW agent to restore state later.
@@ -39,10 +40,10 @@ class MC_AIXI_CTW_Undo:
         """
 
         # Copy the main attributes of the given agent into this class.
-        self.age = agent.age
-        self.total_reward = agent.total_reward
-        self.history_size = agent.history_size()
-        self.last_update = agent.last_update
+        self.age = deepcopy(agent.age)
+        self.total_reward = deepcopy(agent.total_reward)
+        self.history_size = deepcopy(agent.history_size())
+        self.last_update = deepcopy(agent.last_update)
     # end def
 # end class
 
@@ -322,6 +323,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         old_history_size = undo_instance.history_size
         current_history_size = self.history_size()
         if current_history_size > old_history_size:
+            print("")
             self.context_tree.revert(current_history_size - old_history_size)
     # end def
 
