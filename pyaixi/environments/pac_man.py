@@ -33,7 +33,7 @@ pacman_ghost_observation_enum = util.enum(gNull = 0, gTopWall = 16,gDownWall = 3
         
 pacman_smell_observation_enum = util.enum(mD_n = 0, mD_2 = 256, mD_3 = 512, mD_4 = 1024)
 smell_constant = 4
-pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 2048, oDown = 4096, 
+pacman_sight_observation_enum = util.enum(sNull = 0, sTop = 2048, sDown = 4096, 
                                                   sLeft = 8192, sRight = 16384)
 pacman_power_observation_enum = util.enum(withouEffect = 0, underEffect = 32768)
 
@@ -124,9 +124,6 @@ class PacMan(environment.Environment):
         actions: int
             the code for action the pacman just taken.
             
-        foragent: bool defualt True
-            When it is true, it will automatically comeup with the setups for agents.
-            When it is false, we can have the actual pacman to play.
         
     '''
     
@@ -162,7 +159,6 @@ class PacMan(environment.Environment):
         self.observation = self.calculate_observation()
         self.action = None
         
-        self.foragent = True
      
     def random_pellets(self,x):
         
@@ -300,8 +296,7 @@ class PacMan(environment.Environment):
         """ 
             Perform the actions to pacman. Then, update the map,update the rewards 
             and obersvations accordingly.
-            If the foragent attribute is true, we also perform the movement
-            of monster.
+            we also perform the movement of monster.
             The caculation of rewards follow the rules below,
                 1.The agent receives a penalty of 1 for each movement action
                 2.a penalty of 10 for running into a wall, and agenet will stay
@@ -325,17 +320,13 @@ class PacMan(environment.Environment):
             the current obervations for pacman
         """     
         
-        # if it is foragent, then we perform the movement for monster
-        if self.foragent:
-            self.movement_monster()
-        
         self.action = action
         
         self.reward -= 1
         
         # if all pellets are eaten
         # then we restart the game automatically
-        if self.pellets_remaining == 0 and self.foragent:
+        if self.pellets_remaining == 0 :
             
             self.layout = self.load(layout_txt) 
             self.find_Positions()
@@ -377,6 +368,14 @@ class PacMan(environment.Environment):
             
         else:
             
+            if on_map == "S":
+                
+                self.reward+=10
+                self.super_pacman = True
+                self.super_pacman_time += 100
+                self.layout[x][y] = " "
+                self.power_pill.remove([x,y])
+            
             if [x,y] in self.monster.values():
                             
                 if self.super_pacman:
@@ -388,7 +387,7 @@ class PacMan(environment.Environment):
                     self.reward += 30
                     
                     #find out the monster eaten by the pacman
-                    for name, location in self.monster:
+                    for name, location in self.monster.items():
                         
                         if location == [x,y]:
                             
@@ -398,25 +397,16 @@ class PacMan(environment.Environment):
                     
                     m_y = 0
                     
-                    while self.layout[m_x][m_y] == "%" and [m_x,m_y] in self.monster.values():
+                    while self.layout[m_x][m_y] == "%" and [m_x,m_y] not in self.monster.values():
                     
                         m_x = random.randint(0,self.rows-1)
                         m_y = random.randint(0,self.cols-1)
-                    
-                    self.monster[name] ==[m_x,m_y]
+                        
+                    self.monster[name] =[m_x,m_y]
                     
                 else:
                     
                     self.reward -= 50
-            
-            
-            elif on_map == "S":
-                
-                self.reward+=10
-                self.super_pacman = True
-                self.super_pacman_time += 100
-                self.layout[x][y] = " "
-                self.power_pill.remove([x,y])
                                                                         
         if self.super_pacman_time > 0:
             
@@ -432,7 +422,11 @@ class PacMan(environment.Environment):
         self.reward = max(self.reward,0)
         
         #calculate the obervations
+       
+        self.movement_monster()
+        
         self.observation = self.calculate_observation()
+        
         
         return self.reward, self.observation
     
@@ -497,21 +491,42 @@ class PacMan(environment.Environment):
             x,y = l
             shadow_layout[x,y] = name
             
-        if self.monster_names.intersection(shadow_layout[x,y+1:]):
-            #top
-            observation+= pacman_ghost_observation_enum.gTopWall
+        if self.monster_names.intersection(shadow_layout[x,y:]):
+            #right,including at same position
+            for name in self.monster_names.intersection(shadow_layout[x,y:]):
+                m_x,m_y = self.monster[name]
+                #no wall in the sight
+                if "%" not in shadow_layout[x,y:m_y]:
+                    observation+= pacman_ghost_observation_enum.gRightWall
+                    break
         
         if self.monster_names.intersection(shadow_layout[x,:y]):
-            #down
-            observation+= pacman_ghost_observation_enum.gDownWall
+            #left
+            
+            for name in self.monster_names.intersection(shadow_layout[x,:y]):
+                m_x,m_y = self.monster[name]
+                #no wall in the sight
+                if "%" not in shadow_layout[x,m_y:y]:
+                    observation+= pacman_ghost_observation_enum.gLeftWall
+                    break
             
         if self.monster_names.intersection(shadow_layout[:x,y]):
-            #left
-            observation+= pacman_ghost_observation_enum.gLeftWall
+            #down
+            for name in self.monster_names.intersection(shadow_layout[:x,y]):
+                m_x,m_y = self.monster[name]
+                #no wall in the sight
+                if "%" not in shadow_layout[m_x:x,y]:
+                    observation+= pacman_ghost_observation_enum.gDownWall
+                    break
             
         if self.monster_names.intersection(shadow_layout[x+1:,y]):
-            #right
-            observation+= pacman_ghost_observation_enum.gRightWall
+            #top
+            for name in self.monster_names.intersection(shadow_layout[x+1:,y]):
+                m_x,m_y = self.monster[name]
+                #no wall in the sight
+                if "%" not in shadow_layout[x+1:m_x,y]:
+                    observation+= pacman_ghost_observation_enum.gTopWall
+                    break
         
         #calculate the observations for pellets in smelling.        
         distance = [2,3,4]
@@ -533,22 +548,26 @@ class PacMan(environment.Environment):
             observation+=2**(d+smell_constant)
             
         #calculate the observations for pellets in sight.
-                            
-        if '*' in layout[x,y+1:]:
-            #top
-            observation+= pacman_sight_observation_enum.sTop
         
-        if '*' in layout[x,:y]:
-            #down
-            observation+= pacman_sight_observation_enum.sDown
+        
+        
+        if '*' in layout[x,y :y+np.where(layout[x,y:]=="%")[0][0]]:
+            #right
             
-        if '*' in layout[:x,y]:
+            observation+= pacman_sight_observation_enum.sRight
+        
+        if '*' in layout[x, np.where(layout[x,:y]=="%")[0][-1]:y]:
             #left
             observation+= pacman_sight_observation_enum.sLeft
             
-        if '*' in layout[x+1:,y]:
-            #right
-            observation+= pacman_sight_observation_enum.sRight
+        if '*' in layout[np.where(layout[:x,y]=="%")[0][-1]:x,:y]:
+            #down
+            observation+= pacman_sight_observation_enum.sDown
+            
+        if '*' in layout[x:np.where(layout[x,y]=="%")[0][0],y]:
+            #top
+        
+            observation+= pacman_sight_observation_enum.sTop
         
         #calculate the observations of power pill effect.
         if self.super_pacman:
@@ -745,7 +764,6 @@ class PacMan(environment.Environment):
         '''  
         
             
-        self.foragent = False
             
         while not self.is_finished:
                 
@@ -754,6 +772,7 @@ class PacMan(environment.Environment):
             print(f"Reward :{self.reward}")
             print(f"Super Pacman remainng time {self.super_pacman_time}")
             print(f"Observation : {self.observation}")
+            print(f"Pellets remaining :{self.pellets_remaining}")
             
             action = input("Action is :  ")
             
@@ -774,7 +793,6 @@ class PacMan(environment.Environment):
                 action = "3" #right
                     
             self.perform_action(action)
-            self.movement_monster()
             
             
         print("**"*20)
