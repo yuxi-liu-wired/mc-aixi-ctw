@@ -125,7 +125,7 @@ class MonteCarloSearchNode:
                 self.children[observation] = MonteCarloSearchNode(decision_node)
             # end if
             child = self.children[observation]
-#            print("\t-- current horizon: "+str(horizon-1))
+            print("\t-- current horizon: "+str(horizon-1))
             reward_sum = reward + child.sample(agent, horizon - 1)
 
         elif self.visits == 0: #Rollout if decision_node hasnt been visited

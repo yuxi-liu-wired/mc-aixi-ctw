@@ -6,6 +6,21 @@ from pyaixi.agent import update_enum, action_update, percept_update
 import pytest
 import random
 
+
+def mc_iter(aixi):
+    print("\n\n=========== Sample ===========")
+    samp = mc_tree.sample(aixi, m)
+    print(" * Exp.reward of root: "+str(mc_tree.mean))
+    print(" * got action sample: "+str(samp))
+    
+    print("\t** hist size: "+str(aixi.history_size()))
+    print("\t** agent age: "+str(aixi.age))
+    print("\t** agent tot reward: "+str(aixi.total_reward))
+    print("CTW history: "+str(aixi.context_tree.history))
+    print("env status:\n\t"+aixi.environment.print())
+
+
+
 m = 5 # agent horizon
 d = 10 # CT depth
 s = 10 # number of simulations
@@ -16,52 +31,41 @@ options = {'agent-horizon': m,
            'mc-simulations': s}
 
 print("---======== BEGIN TEST ========---")
-random.seed(15)
+"""
+tried seed:
+    15 - correct preds up to 4 samples
+"""
+random.seed(5)
 
 aixi = MC_AIXI_CTW_Agent(env, options)
 percept = aixi.generate_percept_and_update()
 
-
-rollout_r = aixi.playout(6)
-print("test rollout, got: "+str(rollout_r))
+#rollout_r = aixi.playout(6)
+#print("test rollout, got: "+str(rollout_r))
 
 mc_tree = MonteCarloSearchNode(decision_node)
 
-print("\n======= Sample =======")
+print("\n\n=========== Sample ===========")
 samp = mc_tree.sample(aixi, m)
 print(" * Exp.reward of root: "+str(mc_tree.mean))
 print(" * Root children: "+str(mc_tree.children))
-print(" * got sample: "+str(samp))
+print(" * got action sample: "+str(samp))
 
-print("\n======= Sample =======")
-samp = mc_tree.sample(aixi, m)
-print(" * Exp.reward of root: "+str(mc_tree.mean))
-print(" * Root children: "+str(mc_tree.children))
-print(" * got sample: "+str(samp))
-
-print("\n======= Sample =======")
-samp = mc_tree.sample(aixi, m)
-print(" * Exp.reward of root: "+str(mc_tree.mean))
-print(" * Root children: "+str(mc_tree.children))
-print(" * got sample: "+str(samp))
-
-print("\n======= Sample =======")
-samp = mc_tree.sample(aixi, m)
-print(" * Exp.reward of root: "+str(mc_tree.mean))
-print(" * Root children: "+str(mc_tree.children))
-print(" * got sample: "+str(samp))
-
-print("\n======= Sample =======")
-samp = mc_tree.sample(aixi, m)
-print(" * Exp.reward of root: "+str(mc_tree.mean))
-print(" * Root children: "+str(mc_tree.children))
-print(" * got sample: "+str(samp))
+print("\t** hist size: "+str(aixi.history_size()))
+print("\t** agent age: "+str(aixi.age))
+print("\t** agent tot reward: "+str(aixi.total_reward))
+print("CTW history: "+str(aixi.context_tree.history))
+print("env status:\n\t"+aixi.environment.print())
 
 
-#print("\n======= Sample =======")
-#samp = mc_tree.children[0].sample(aixi, m)
+mc_iter(aixi)
 
-#print(aixi.environment.print())
+
+mc_iter(aixi)
+
+
+mc_iter(aixi)
+
 
 #sampled_action = mcts_planning(aixi, aixi.horizon, aixi.mc_simulations)
 #print("Sampled action: "+str(sampled_action))

@@ -15,7 +15,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-layout = "cheeseMaze.txt"
+layout = "cheese_maze.txt"
 
 mouse_action_list = util.enum('up','down','left','right')
 #                                       5      7      8      9     10     12
