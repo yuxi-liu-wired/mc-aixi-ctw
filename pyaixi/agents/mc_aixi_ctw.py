@@ -323,7 +323,6 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         old_history_size = undo_instance.history_size
         current_history_size = self.history_size()
         if current_history_size > old_history_size:
-            print("")
             self.context_tree.revert(current_history_size - old_history_size)
     # end def
 
@@ -425,8 +424,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         assert self.environment.is_finished == False
         
         reward_sum = 0.0
-        self.set_savestate() #save current agent and env state before simulating both
-
+        
         for i in range(horizon):
             if self.environment.is_finished:
                 break
