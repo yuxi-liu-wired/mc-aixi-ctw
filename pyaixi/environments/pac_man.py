@@ -214,7 +214,12 @@ class PacMan(environment.Environment):
         
         pacMan_map = []
         sep = '/' if '/' in PROJECT_ROOT else ''''\''''
-        path = PROJECT_ROOT + f"{sep}pyaixi{sep}environments{sep}" + layout
+        import inspect
+        
+        #the path reading is based on the notes on stackoverflow
+        #link: https://stackoverflow.com/questions/50499/how-do-i-get-the-path-and-name-of-the-file-that-is-currently-executing
+        
+        path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + sep + layout
             
         with open(path) as f:
             lines = f.readlines()
