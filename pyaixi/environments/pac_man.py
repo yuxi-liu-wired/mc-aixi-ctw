@@ -490,41 +490,42 @@ class PacMan(environment.Environment):
         for name,l in self.monster.items():
             x,y = l
             shadow_layout[x,y] = name
-            
-        if self.monster_names.intersection(shadow_layout[x,y:]):
+          
+        
+        if self.monster_names.intersection(shadow_layout[p_x,p_y:]):
             #right,including at same position
-            for name in self.monster_names.intersection(shadow_layout[x,y:]):
+            for name in self.monster_names.intersection(shadow_layout[p_x,p_y:]):
                 m_x,m_y = self.monster[name]
                 #no wall in the sight
-                if "%" not in shadow_layout[x,y:m_y]:
+                if "%" not in shadow_layout[p_x,p_y:m_y]:
                     observation+= pacman_ghost_observation_enum.gRightWall
                     break
         
-        if self.monster_names.intersection(shadow_layout[x,:y]):
+        if self.monster_names.intersection(shadow_layout[p_x,:p_y]):
             #left
             
-            for name in self.monster_names.intersection(shadow_layout[x,:y]):
+            for name in self.monster_names.intersection(shadow_layout[p_x,:p_y]):
                 m_x,m_y = self.monster[name]
                 #no wall in the sight
-                if "%" not in shadow_layout[x,m_y:y]:
+                if "%" not in shadow_layout[p_x,m_y:p_y]:
                     observation+= pacman_ghost_observation_enum.gLeftWall
                     break
-            
-        if self.monster_names.intersection(shadow_layout[:x,y]):
+        
+        if self.monster_names.intersection(shadow_layout[:p_x,p_y]):
             #down
-            for name in self.monster_names.intersection(shadow_layout[:x,y]):
+            for name in self.monster_names.intersection(shadow_layout[:p_x,p_y]):
                 m_x,m_y = self.monster[name]
                 #no wall in the sight
-                if "%" not in shadow_layout[m_x:x,y]:
+                if "%" not in shadow_layout[m_x:p_x,p_y]:
                     observation+= pacman_ghost_observation_enum.gDownWall
                     break
             
-        if self.monster_names.intersection(shadow_layout[x+1:,y]):
+        if self.monster_names.intersection(shadow_layout[p_x+1:,p_y]):
             #top
-            for name in self.monster_names.intersection(shadow_layout[x+1:,y]):
+            for name in self.monster_names.intersection(shadow_layout[p_x+1:,p_y]):
                 m_x,m_y = self.monster[name]
                 #no wall in the sight
-                if "%" not in shadow_layout[x+1:m_x,y]:
+                if "%" not in shadow_layout[p_x+1:m_x,p_y]:
                     observation+= pacman_ghost_observation_enum.gTopWall
                     break
         
@@ -550,23 +551,22 @@ class PacMan(environment.Environment):
         #calculate the observations for pellets in sight.
         
         
-        
-        if '*' in layout[x,y :y+np.where(layout[x,y:]=="%")[0][0]]:
+        if '*' in layout[p_x,p_y :p_y+np.where(layout[p_x,p_y:]=="%")[0][0]]:
             #right
-            
             observation+= pacman_sight_observation_enum.sRight
-        
-        if '*' in layout[x, np.where(layout[x,:y]=="%")[0][-1]:y]:
+            
+            
+        if '*' in layout[p_x, np.where(layout[p_x,:p_y]=="%")[0][-1]:p_y]:
             #left
             observation+= pacman_sight_observation_enum.sLeft
             
-        if '*' in layout[np.where(layout[:x,y]=="%")[0][-1]:x,:y]:
+            
+        if '*' in layout[np.where(layout[:p_x,p_y]=="%")[0][-1]:p_x,p_y]:
             #down
             observation+= pacman_sight_observation_enum.sDown
-            
-        if '*' in layout[x:np.where(layout[x,y]=="%")[0][0],y]:
-            #top
         
+        if '*' in layout[p_x:np.where(layout[p_x:,p_y]=="%")[0][0],p_y]:
+            #top
             observation+= pacman_sight_observation_enum.sTop
         
         #calculate the observations of power pill effect.
