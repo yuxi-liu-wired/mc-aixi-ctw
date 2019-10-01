@@ -3,7 +3,8 @@
 """
 Created on Tue Oct  1 19:16:22 2019
 
-@author: Yan
+@author: Yan Yang u6169130
+         Jiayan Liu u6107041
 """
 
 import os 
