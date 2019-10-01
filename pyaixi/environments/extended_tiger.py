@@ -95,22 +95,28 @@ class ExtendedTiger(environment.Environment):
         # Save the action.
         self.action = action
         print("perform action", action)
-
+        tmp_reward = 0
+        tmp_observation = void
         if self.state == sitting:  
             if action == stand:
                 self.reward -= 1  #perform stand, when sitting given reward -1
                 self.state = standing
+                tmp_reward = self.reward
             elif action == listen: #perform lsiten, when sitting given reward -1
                 self.reward -= 1
+                tmp_reward = self.reward
                 if (random.random() <= self.default_probability):
                     self.observation = self.tiger
                 else:
                     if self.tiger == left:
                         self.observation = right
+                        tmp_observation = void
                     else:
                         self.observation = left
+                        tmp_observation = void
             else: #other invalid action given reward -10
                 self.reward -= 10
+                tmp_reward = self.reward
         else:
             if action == open_left:  
                 if self.tiger == left:
