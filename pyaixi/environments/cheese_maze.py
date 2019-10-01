@@ -65,7 +65,7 @@ class CheeseMaze(environment.Environment):
 		self.valid_rewards = range(2**5)
 		self.valid_actions = list(mouse_action_list.keys())
 		# self.valid_observations = list(mouse_valid_observations.keys())
-		self.valid_observations = range(2*4)
+		self.valid_observations = list(mouse_valid_observations.keys())
 		self.observation = 0
 		self.reward = 0
 
@@ -94,8 +94,7 @@ class CheeseMaze(environment.Environment):
 
 	def check_game_over(self):
 		if self.mouse[0] == self.cheese[0] and self.mouse[1] == self.cheese[1]:
-			self.is_finished = True
-		return True
+			return True
 
     
 	def print(self):
