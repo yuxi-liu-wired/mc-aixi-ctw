@@ -135,28 +135,12 @@ class PacMan(environment.Environment):
         
         '''
         
-        self.rows = 0
-        self.cols = 0
-        self.magic_channel = dict()
-        self.max_reward = 0
-        self.pellets_remaining = 0
-        self.max_observation = 2**16
-        self.layout = self.load(layout_txt)
-        self.monster = dict()
-        self.power_pill = []
-        self.pacman = None
-        self.find_Positions()
-        self.reward = 0
-        self.monster_names = set(self.monster.keys())
-        self.is_finished = False
-        self.super_pacman = False
-        self.super_pacman_time = 0
+        self.restart()
         
         self.valid_rewards = range(self.max_reward)
         self.valid_actions = list(pacman_action_enum.keys())
         self.valid_observations = range(self.max_observation)
         
-        self.observation = self.calculate_observation()
         self.action = None
         
      
@@ -289,6 +273,31 @@ class PacMan(environment.Environment):
             self.layout[x][y] = " "
             
         self.max_reward = self.max_reward * 10 + len(self.power_pill) * 100 * 30 + 100
+        
+        
+    def restart(self):
+        '''
+        restart the enviroment
+        
+        '''
+        self.rows = 0
+        self.cols = 0
+        self.magic_channel = dict()
+        self.max_reward = 0
+        self.pellets_remaining = 0
+        self.max_observation = 2**16
+        self.layout = self.load(layout_txt)
+        self.monster = dict()
+        self.power_pill = []
+        self.pacman = None
+        self.find_Positions()
+        self.reward = 0
+        self.monster_names = set(self.monster.keys())
+        self.is_finished = False
+        self.super_pacman = False
+        self.super_pacman_time = 0
+        self.observation = self.calculate_observation()
+                    
             
                           
     def perform_action(self, action):
@@ -320,21 +329,12 @@ class PacMan(environment.Environment):
             the current obervations for pacman
         """     
         
+        self.movement_monster()
+        
         self.action = action
         
         self.reward -= 1
-        
-        # if all pellets are eaten
-        # then we restart the game automatically
-        if self.pellets_remaining == 0 :
-            
-            self.layout = self.load(layout_txt) 
-            self.find_Positions()
-            self.super_pacman = False
-            self.super_pacman_time = 0
-            
-            return self.perform_action(action)
-        
+                
         # calculate the postion of pacman based  on current location
         # and action
         movement = direction[str(action)]
@@ -364,49 +364,53 @@ class PacMan(environment.Environment):
             # if packman is going into the wall
             # keep the old location
             self.pacman = [old_x,old_y]
+            x,y = self.pacman
             
+        
             
-        else:
+        if [x,y] in self.monster.values():
             
-            if on_map == "S":
+            if self.super_pacman:
                 
-                self.reward+=10
-                self.super_pacman = True
-                self.super_pacman_time += 100
-                self.layout[x][y] = " "
-                self.power_pill.remove([x,y])
+                # if the monster is eaten by the pacman
+                # reset it is location by generate random number
+                # also, no monster are in the same location
+                
+                self.reward += 30
+                
+                #find out the monster eaten by the pacman
+                for name, location in self.monster.items():
+                    
+                    if location == [x,y]:
+                        
+                        break
+                
+                m_x = 0 
+                
+                m_y = 0
+                
+                while self.layout[m_x][m_y] == "%" and [m_x,m_y] not in self.monster.values():
+                
+                    m_x = random.randint(0,self.rows-1)
+                    m_y = random.randint(0,self.cols-1)
+                    
+                self.monster[name] =[m_x,m_y]
+                
+            else:
+                
+                self.reward -= 50
+                past_reward = max(0,self.reward)
+                self.restart()
+                return past_reward, self.observation
+                
+        if on_map == "S":
+                
+            self.reward+=10
+            self.super_pacman = True
+            self.super_pacman_time += 100
+            self.layout[x][y] = " "
+            self.power_pill.remove([x,y])
             
-            if [x,y] in self.monster.values():
-                            
-                if self.super_pacman:
-                    
-                    # if the monster is eaten by the pacman
-                    # reset it is location by generate random number
-                    # also, no monster are in the same location
-                    
-                    self.reward += 30
-                    
-                    #find out the monster eaten by the pacman
-                    for name, location in self.monster.items():
-                        
-                        if location == [x,y]:
-                            
-                            break
-                    
-                    m_x = 0 
-                    
-                    m_y = 0
-                    
-                    while self.layout[m_x][m_y] == "%" and [m_x,m_y] not in self.monster.values():
-                    
-                        m_x = random.randint(0,self.rows-1)
-                        m_y = random.randint(0,self.cols-1)
-                        
-                    self.monster[name] =[m_x,m_y]
-                    
-                else:
-                    
-                    self.reward -= 50
                                                                         
         if self.super_pacman_time > 0:
             
@@ -421,10 +425,16 @@ class PacMan(environment.Environment):
             
         self.reward = max(self.reward,0)
         
-        #calculate the obervations
-       
-        self.movement_monster()
         
+        # if all pellets are eaten
+        # then we restart the game automatically
+        if self.pellets_remaining == 0 :
+            
+            past_reward = self.reward 
+            self.restart()        
+            return past_reward, self.observation
+
+        #calculate the obervations
         self.observation = self.calculate_observation()
         
         
@@ -551,12 +561,22 @@ class PacMan(environment.Environment):
         #calculate the observations for pellets in sight.
         
         
-        if '*' in layout[p_x,p_y :p_y+np.where(layout[p_x,p_y:]=="%")[0][0]]:
+        if len(np.where(layout[p_x,p_y:]=="%")[0]) == 0:
+            #right
+            if '*' in layout[p_x,p_y:]:
+                observation+= pacman_sight_observation_enum.sRight
+        
+        elif '*' in layout[p_x,p_y :p_y+np.where(layout[p_x,p_y:]=="%")[0][0]]:
             #right
             observation+= pacman_sight_observation_enum.sRight
             
-            
-        if '*' in layout[p_x, np.where(layout[p_x,:p_y]=="%")[0][-1]:p_y]:
+        
+        if len(np.where(layout[p_x,:p_y]=="%")[0]) == 0:
+            #left
+            if '*' in layout[p_x,:p_y]:
+                observation+= pacman_sight_observation_enum.sLeft
+        
+        elif '*' in layout[p_x, np.where(layout[p_x,:p_y]=="%")[0][-1]:p_y]:
             #left
             observation+= pacman_sight_observation_enum.sLeft
             
@@ -656,8 +676,11 @@ class PacMan(environment.Environment):
                     if (new_x,new_y) in self.magic_channel:
             
                         new_x,new_y = self.magic_channel[new_x,new_y]
+                        
+                    coordinates = list(self.monster.values())
+                    coordinates.remove([x,y])
                     
-                    if self.layout[new_x][new_y] != "%"  and [new_x,new_y] not in self.monster.values():
+                    if self.layout[new_x][new_y] != "%"  and [new_x,new_y] not in coordinates:
                         
                         valid_actions.append([[new_x,new_y],abs(p_x - new_x) + abs(p_y - new_y)])
                         
