@@ -154,7 +154,7 @@ class ExtendedTiger(environment.Environment):
         
     def print(self):
         print("==" * 20)
-        print(f"Total Reward:{self.tmp_reward}")# Not able to show the last reward
+        print(f"Total Reward:{self.tmp_reward+self.reward-100}")# Not able to show the last reward
         
         print(f"Action Reward :{self.reward-100}")
         print(f"State :{tiger_state_enum[self.state]}")
