@@ -27,7 +27,7 @@ kp_action_enum = util.enum('pas', 'bet')
 
 # Defines an enumeration to represent agent observation: whether the coin landed on heads or tails.
 kp_card_observation_enum = util.enum(j=0, q=1, k=2)
-kp_opponent_observation_enum = util.enum(opBet=3, opPass=4)
+kp_opponent_observation_enum = util.enum(opBet=0, opPass=4)
 
 # Defines an enumeration to represent agent reward: whether the gaent predicted correctly.
 kp_bet_reward_enum = util.enum(betWin = 4, betLoss = 0)
@@ -150,7 +150,14 @@ class KuhnPoker(environment.Environment):
         if self.action == bet and self.op_action == opPass:
             if (self.op_card == q and random.random() < self.default_probability) or self.op_card == k:
                 self.op_action = opBet
+                print("Opponent changed his mind and choose to bet")
                 self.observation = self.calculate_observation()
+                if (self.op_card == j) or (self.op_card == q and self.agent_card == k):
+                    self.reward = betWin
+                else:
+                    self.reward = betLoss
+                self.clear_start()
+                return self.observation, self.reward
             else:
                 self.op_action = opPass
                 self.reward = pasWin
@@ -195,5 +202,30 @@ class KuhnPoker(environment.Environment):
         print(f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
         print(self)
     # end def
-# end class
+    def running(self):
+        while not self.is_finished:
+                
+            print(self)
+            print("==" * 20)
+            print(f"Reward of last game: {self.reward-2}")
+            print(f"Your card is:{kp_card_observation_enum[self.agent_card]}")
+            print(f"Opponent choose to : {kp_opponent_observation_enum[self.op_action]}")
+            print(f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
+            
+            action = input("Action is :  ")
+            
+            if action == "bet":
+            
+                action = 0
+                
+            elif action == "pass":
+            
+                action  = 1
+                    
+            self.perform_action(action)
+            
+            
+        print("**"*20)
+        print('{:^40}'.format("Game Over"))
+        print("**"*20)    
 
