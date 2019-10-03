@@ -429,8 +429,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             _, reward = self.generate_percept_and_update()
             reward_sum += reward
         # end for
-
-        self.restore_savestate() #end simulation and get agent and env back to state before simulation
+        
         return reward_sum
     # end def
 

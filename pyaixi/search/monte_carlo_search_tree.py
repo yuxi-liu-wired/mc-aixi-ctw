@@ -158,7 +158,7 @@ class MonteCarloSearchNode:
         agent.set_savestate()
         for i in range(iterations):
             self.sample(agent, horizon)
-        agent.restore_savestate()
+            agent.restore_savestate()
     # end def
 
     def select_action(self, agent, horizon):
