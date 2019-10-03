@@ -352,9 +352,6 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # The last update must have been a percept, else this action update is invalid.
         assert self.last_update == percept_update, "Can only perform an action update after a percept update."
 
-        # Update the agent's internal environment model after performing an action.
-        self.environment.perform_action(action)
-
         # Get the symbols that represent this action.
         action_symbols = self.encode_action(action)
 
