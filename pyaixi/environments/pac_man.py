@@ -65,6 +65,8 @@ class PacMan(environment.Environment):
 
             For the user defined layout, the rules must be followed
             P stands for pacman
+            S standards for power pill
+            * standards for pellet
             the rest of alphabeta stands for monster
             % stands for wall
             (x,y) - (x_1,y_1) denotes the equivalence of two location. Typlically composed by one invalid location
