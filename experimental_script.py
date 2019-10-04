@@ -248,7 +248,7 @@ def main(argv):
         compare_performance(paths,names,interval,f"parameter settings for {title}")      
         
 def usage():
-    message = "Usage: python experimental_script.py [-e | --experimental_resul" + os.linesep + \
+    message = "Usage: python experimental_script.py [-e | --experimental_result" + os.linesep + \
               "                                     [-c | --conf_director" + os.linesep + \
               "                                     [-r | --running_experiments" + os.linesep + \
               "                                     [-p | --performance_inrease_graph" + os.linesep + \
