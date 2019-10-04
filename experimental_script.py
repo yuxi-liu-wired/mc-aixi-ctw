@@ -39,12 +39,14 @@ def read(file):
     cycles = []
     average_rewards = []
     with open(file) as f:
+        last_line = None
         for line in f.readlines():
             line = line.strip()
             if "cycle:" in line:
                 cycles.append(int(line[6:]))
-            elif "average reward:" in line:
-                average_rewards.append(float(line[15:]))
+                average_rewards.append(float(last_line.split(",")[2]))
+                
+            last_line = line
     if len(cycles) != len(average_rewards):
         return cycles, average_rewards[:-1]
     else:
@@ -126,8 +128,8 @@ def main(argv):
     try:
         opts, args = getopt.gnu_getopt(
                     argv,
-                    'e:c:r:p:i:v:n:g:',
-                    ['experimental_result=', 'conf_director=','running_experiments=',
+                    'e:c:p:i:v:n:g:',
+                    ['experimental_result=', 'conf_director=',
                      'performance_inrease_graph=','interval_performance_inrease_graph=',
                      'compare_performance_graph=','custom_name=','interval=']
                     )
@@ -144,10 +146,6 @@ def main(argv):
                 command_line_options["conf_director"] = str(arg)
                 continue
             
-            
-            if opt in ('-r', '--running_experiments'):
-                command_line_options["running"] = eval(arg)
-                continue
             
             if opt in ('-p', '--performance_inrease_graph'):
                 command_line_options["performance_inrease"] = arg.split("~")
@@ -184,7 +182,7 @@ def main(argv):
         conf_director = default_options["conf_director"]
     
     conf_path = parent_path + f"{sep}{conf_director}"
-    conf_files = os.listdir(conf_path)
+    conf_files = [f for f in os.listdir(conf_path) if f.endswith(".conf")]
     
     #where your store ur log information
     if "experimental_result" in command_line_options:
@@ -250,14 +248,13 @@ def main(argv):
 def usage():
     message = "Usage: python experimental_script.py [-e | --experimental_result" + os.linesep + \
               "                                     [-c | --conf_director" + os.linesep + \
-              "                                     [-r | --running_experiments" + os.linesep + \
               "                                     [-p | --performance_inrease_graph" + os.linesep + \
               "                                     [-i | --interval_performance_inrease_graph" + os.linesep + \
               "                                     [-v | --compare_performance_graph" + os.linesep + \
               "                                     [-n | --custom_name" + os.linesep + \
               "                                     [-g | --interval" + os.linesep +\
               "Example of Usage" + os.linesep +\
-              '''     python experimental_script.py -r True -c experimental_conf -n test -e experimental_result''' + + os.linesep +\
+              '''     python experimental_script.py  -c experimental_conf -n test -e experimental_result''' + + os.linesep +\
               '''     python experimental_script.py  -v experimental_result~"['coin flip','coin flip compare']"~'coin flip' -g 10 ''' + os.linesep +\
               '''     python experimental_script.py  -i 'experimental_result/coin_flip.log'~'coin flip' -g 10''' + os.linesep +\
               "     The performance increase function expect 2 inputs, file and tile, please using ~ to split your inputs" + os.linesep +\
