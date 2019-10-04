@@ -47,7 +47,19 @@ direction = {
 
 direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
 
+rule = {
+        "movement": -1,
+        "wall"    : -10,
+        "pellet"  : 10,
+        "caught"  : -50,
+        "all"     : 100,
+        "pill"    : 10,
+        "eat_g"   : 30
+        }
 
+compensate = abs(min(rule.values()))
+
+positive_rule = {key:value+compensate for key,value in rule.items()}
 
 class PacMan(environment.Environment):
         
@@ -136,10 +148,11 @@ class PacMan(environment.Environment):
         '''
         
         self.restart()
-        
+        self.max_reward = 2**8
         self.valid_rewards = range(self.max_reward)
         self.valid_actions = list(pacman_action_enum.keys())
         self.valid_observations = range(self.max_observation)
+        
         
         self.action = None
         
@@ -164,8 +177,6 @@ class PacMan(environment.Environment):
         """        
         
         if x == ' ' and default_probability > random.random():
-            
-            self.max_reward += 1
             
             return "*"
         
@@ -231,7 +242,6 @@ class PacMan(environment.Environment):
             For the sake of performing action and movement
             of monster.
             
-            Also, calculating the maximum rewards.
        
         Parameters
         ----------
@@ -272,7 +282,6 @@ class PacMan(environment.Environment):
             x,y = positon
             self.layout[x][y] = " "
             
-        self.max_reward = self.max_reward * 10 + len(self.power_pill) * 100 * 30 + 100
         
         
     def restart(self):
@@ -283,7 +292,6 @@ class PacMan(environment.Environment):
         self.rows = 0
         self.cols = 0
         self.magic_channel = dict()
-        self.max_reward = 0
         self.pellets_remaining = 0
         self.max_observation = 2**16
         self.layout = self.load(layout_txt)
@@ -333,7 +341,7 @@ class PacMan(environment.Environment):
         
         self.action = action
         
-        self.reward -= 1
+        self.reward = positive_rule["movement"]
                 
         # calculate the postion of pacman based  on current location
         # and action
@@ -354,13 +362,13 @@ class PacMan(environment.Environment):
         
         if on_map == "*":
             
-            self.reward += 10
+            self.reward += positive_rule["pellet"]
             self.layout[x][y] = " "
             self.pellets_remaining -= 1
         
         elif on_map == "%":
             
-            self.reward -= 10
+            self.reward += positive_rule["wall"]
             # if packman is going into the wall
             # keep the old location
             self.pacman = [old_x,old_y]
@@ -376,7 +384,7 @@ class PacMan(environment.Environment):
                 # reset it is location by generate random number
                 # also, no monster are in the same location
                 
-                self.reward += 30
+                self.reward += positive_rule["eat_g"]
                 
                 #find out the monster eaten by the pacman
                 for name, location in self.monster.items():
@@ -398,14 +406,14 @@ class PacMan(environment.Environment):
                 
             else:
                 
-                self.reward -= 50
-                past_reward = max(0,self.reward)
+                self.reward += positive_rule["caught"]
+                past_reward = self.reward
                 self.restart()
                 return past_reward, self.observation
                 
         if on_map == "S":
                 
-            self.reward+=10
+            self.reward+=positive_rule["pill"]
             self.super_pacman = True
             self.super_pacman_time += 100
             self.layout[x][y] = " "
@@ -421,10 +429,8 @@ class PacMan(environment.Environment):
             self.super_pacman = False
             
         if self.pellets_remaining == 0:
-            self.reward += 100
+            self.reward += positive_rule["all"]
             
-        self.reward = max(self.reward,0)
-        
         
         # if all pellets are eaten
         # then we restart the game automatically
@@ -662,6 +668,12 @@ class PacMan(environment.Environment):
                 self.monster[name] = [new_x,new_y]
                 
             else:
+                
+                #under power pill, monster move every 2 steps.
+                
+                if self.super_pacman and self.super_pacman_time % 2 == 0:
+                    
+                    continue
                 
                 # move towards the pacman
                 
