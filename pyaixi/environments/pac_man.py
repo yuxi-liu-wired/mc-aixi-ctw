@@ -367,8 +367,8 @@ class PacMan(environment.Environment):
             self.pellets_remaining -= 1
         
         elif on_map == "%":
-            
-            self.reward += positive_rule["wall"]
+            #havent take any actions
+            self.reward += positive_rule["wall"] - positive_rule["movement"]
             # if packman is going into the wall
             # keep the old location
             self.pacman = [old_x,old_y]
