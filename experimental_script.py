@@ -35,7 +35,7 @@ def running(conf_files,custom_name,experimental_result,conf_director,logging):
         
         
         
-def read(file):
+def read(file,reward):
     cycles = []
     average_rewards = []
     with open(file) as f:
@@ -44,7 +44,12 @@ def read(file):
             line = line.strip()
             if "cycle:" in line:
                 cycles.append(int(line[6:]))
-                average_rewards.append(float(last_line.split(",")[2]))
+                
+                if reward:
+                    average_rewards.append(float(last_line.split(",")[2]))
+            
+            elif not reward and "average reward:" in line:
+                average_rewards.append(float(line[15:]))
                 
             last_line = line
     if len(cycles) != len(average_rewards):
@@ -52,8 +57,8 @@ def read(file):
     else:
         return cycles, average_rewards
 
-def performance_inrease(file,name):
-    cycles,average_rewards = read(file)
+def performance_inrease(file,name,reward):
+    cycles,average_rewards = read(file,reward)
     num = int(len(cycles)/10)
     plt.figure(figsize=(9, 6)) 
     plt.plot(cycles,average_rewards,'-',color = "cyan",lw = 2)
@@ -80,8 +85,8 @@ def smooth(cycles,average_rewards,num):
         
     return smoothed_cycles,smoothed_average_rewards
 
-def interval_performance_inrease(file,name,num):
-    cycles,average_rewards = read(file)
+def interval_performance_inrease(file,name,num,reward):
+    cycles,average_rewards = read(file,reward)
     smoothed_cycles,smoothed_average_rewards = smooth(cycles,average_rewards,num)
     plt.figure(figsize=(9, 6)) 
     plt.plot(smoothed_cycles,smoothed_average_rewards,'-',color = "cyan",lw = 2)
@@ -93,13 +98,13 @@ def interval_performance_inrease(file,name,num):
     plt.show()    
 
 
-def compare_performance(files,names,num,compare_name):
+def compare_performance(files,names,num,compare_name,reward):
     
     plt.figure(figsize=(9, 6)) 
     for index in range(len(files)):
         file  = files[index]
         name = names[index] 
-        cycles,average_rewards = read(file)
+        cycles,average_rewards = read(file,reward)
         smoothed_cycles,smoothed_average_rewards = smooth(cycles,average_rewards,num)
         p = plt.plot(smoothed_cycles,smoothed_average_rewards,'-',lw = 2,label = name)
         plt.plot(smoothed_cycles,smoothed_average_rewards,'D',color = p[0].get_color())
@@ -119,6 +124,7 @@ default_options["experimental_result"]           = "experimental_result"
 default_options["conf_director"]                 =  "experimental_conf"
 default_options["custom_name"]                   =  str(time.time())
 default_options["interval"]                      =  50
+default_options["type_of_reward"]                      =  "reward"
     
 command_line_options = {}
     
@@ -128,10 +134,10 @@ def main(argv):
     try:
         opts, args = getopt.gnu_getopt(
                     argv,
-                    'e:c:p:i:v:n:g:',
+                    'e:c:p:i:v:n:g:t:',
                     ['experimental_result=', 'conf_director=',
                      'performance_inrease_graph=','interval_performance_inrease_graph=',
-                     'compare_performance_graph=','custom_name=','interval=']
+                     'compare_performance_graph=','custom_name=','interval=',"type_of_reward",]
                     )
         for opt, arg in opts:
             
@@ -168,6 +174,9 @@ def main(argv):
                 command_line_options["interval"] = int(arg)
                 continue
             
+            if opt in ('-t', '--type_of_reward'):
+                command_line_options["type_of_reward"] = str(arg)
+                continue
             
     except getopt.GetoptError as e:
         usage()
@@ -216,13 +225,22 @@ def main(argv):
         logging = f"| tee -a {experimental_result}{sep}"
         running(conf_files,custom_name,experimental_result,conf_director,logging)
         
+    if "type_of_reward" in command_line_options:
+        
+        if command_line_options["type_of_reward"] == default_options["type_of_reward"]:
+            reward = True
+        else:
+            reward = False
+        
+    else:
+        reward = True
     
     if "performance_inrease" in command_line_options:
         path = command_line_options["performance_inrease"][0]
         #"experimental_result/coin_flip.log"
         name = command_line_options["performance_inrease"][1]
         #"coin flip"
-        performance_inrease(path,name)
+        performance_inrease(path,name,reward)
         
     
     if "interval_performance_inrease" in command_line_options and command_line_options["interval_performance_inrease"]:
@@ -232,7 +250,7 @@ def main(argv):
         name = command_line_options["interval_performance_inrease"][1]
         #"coin flip"
         
-        interval_performance_inrease(path,name,interval)
+        interval_performance_inrease(path,name,interval,reward)
         
     
     if "compare_performance" in command_line_options and command_line_options["compare_performance"]: 
@@ -243,7 +261,7 @@ def main(argv):
         names = eval(command_line_options["compare_performance"][1])
         title = str(command_line_options["compare_performance"][2])
         #["coin flip","coin flip compare"]
-        compare_performance(paths,names,interval,f"parameter settings for {title}")      
+        compare_performance(paths,names,interval,f"parameter settings for {title}",reward)      
         
 def usage():
     message = "Usage: python experimental_script.py [-e | --experimental_result" + os.linesep + \

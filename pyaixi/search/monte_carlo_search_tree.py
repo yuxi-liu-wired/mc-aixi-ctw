@@ -212,5 +212,8 @@ def mcts_planning(agent, horizon, iterations):
     """
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
-    return mc_tree.select_action(agent, horizon)
+    
+    best_action = max([(action,node.mean) for action,node in mc_tree.children.items()], key=lambda x: x[1])[0]
+    
+    return best_action
 # end def
