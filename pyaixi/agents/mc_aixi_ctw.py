@@ -356,7 +356,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         action_symbols = self.encode_action(action)
 
         # Update the context tree.
-        self.context_tree.update_history(action_symbols)
+        self.context_tree.update(action_symbols)
 
         # Update other properties.
         self.age += 1
