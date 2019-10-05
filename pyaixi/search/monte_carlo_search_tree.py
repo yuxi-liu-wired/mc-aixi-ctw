@@ -73,7 +73,7 @@ class MonteCarloSearchNode:
     # Class attributes.
 
     # Exploration constant for the UCB action policy.
-    exploration_constant = math.sqrt(2.0)
+    exploration_constant = 2.0
 
     # Instance methods.
 
@@ -171,9 +171,9 @@ class MonteCarloSearchNode:
 
         assert self.type == decision_node
 
-        tried_actions = self.children.keys()
+        explored_actions = self.children.keys()
         all_actions = agent.generate_all_actions()
-        untried_actions = list(set(all_actions) - set(tried_actions))
+        untried_actions = list(set(all_actions) - set(explored_actions))
 
         if untried_actions:  # If there are untried actions
             action = random.choice(untried_actions) # choose a random untried action
