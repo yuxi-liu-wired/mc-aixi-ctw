@@ -143,7 +143,7 @@ class MonteCarloSearchNode:
         # update node
         self.mean = (reward_sum + self.mean * self.visits)/(self.visits + 1)
         self.visits = self.visits + 1
-        
+
         return reward_sum
         # NOTE: it is (observation, reward) in Algorithm 2 of [Veness, 2011]
     # end def
@@ -159,7 +159,7 @@ class MonteCarloSearchNode:
         for i in range(iterations):
             self.sample(agent, horizon)
             agent.restore_savestate()
-            
+
     # end def
 
     def select_action(self, agent, horizon):
@@ -180,10 +180,10 @@ class MonteCarloSearchNode:
 #            print("\t-- try untried action: "+str(action))
             self.children[action] = MonteCarloSearchNode(chance_node) # add it as a new MCTS node
             return action # return this action
-        
+
         else: # No untried actions. Use UCB to find the best action.
             assert len(untried_actions) == 0, "All children should have been visited."
-            
+
             action_ucb = {}
             reward_range = agent.range_of_reward()
             for action in all_actions:
@@ -191,7 +191,7 @@ class MonteCarloSearchNode:
                 action_ucb[action] = (child.mean / (horizon * reward_range)
                     + self.exploration_constant * math.sqrt(math.log(self.visits) / child.visits))
             # end for
-    
+
             # now pick the action with the highest UCB score.
             best_action = max(action_ucb, key=action_ucb.get)
 #            print("\t -- action picked through UCB: "+str(action))
@@ -212,8 +212,8 @@ def mcts_planning(agent, horizon, iterations):
     """
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
-    
+
     best_action = max([(action,node.mean) for action,node in mc_tree.children.items()], key=lambda x: x[1])[0]
-    
+
     return best_action
 # end def

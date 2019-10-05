@@ -105,31 +105,31 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
     # Agent/environment interaction loop.
     cycle = 1
-    
+
     #find out whether need to change enviroment during training
-    
+
     second_enviroment_start_time = -1
-     
-    
+
+
     if "second_enviroment" in options:
-        
+
         second_enviroment_start_time = options["second_enviroment"][1]
         second_enviroment_name = options["second_enviroment"][0]
-    
+
     while not environment.is_finished:
         # Check for agent termination.
         if terminate_check and agent.age > terminate_age:
             break
         # end if
-        
+
         #check whether need to swap the enviroments
-        
+
         if cycle == second_enviroment_start_time:
             second_enviroment_start_time = - 1
             from swap_enviroment import load
             agent,environment = load(second_enviroment_name,agent,options)
-            
-        
+
+
         # Save the current time to compute how long this cycle took.
         cycle_start = datetime.datetime.now()
 
@@ -183,7 +183,7 @@ def interaction_loop(agent = None, environment = None, options = {}):
                    str(time_taken), agent.model_size())
         print(message)
         # TODO: implement
-        
+
 
         # Print to standard output when cycle == 2^n or on verbose option.
         if verbose or (cycle & (cycle - 1)) == 0:
@@ -318,8 +318,8 @@ def main(argv):
                 second_enviroment =  arg.split(",")[0]
                 start_time        =  arg.split(",")[1]
                 command_line_options["second_enviroment"] = [str(second_enviroment),int(start_time)]
-                
-            
+
+
         # end for
     except getopt.GetoptError as e:
         # We got an incorrect option. Show the usage and exit.
