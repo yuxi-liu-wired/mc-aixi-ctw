@@ -110,7 +110,7 @@ class KuhnPoker(environment.Environment):
 
     # Instance attributes.
 
-    # Set the default probability for the opponent wants to bet on Q.
+    # The default probability for the opponent to bet on Q in round 2.
     default_probability = 1/3
 
 
@@ -212,6 +212,7 @@ class KuhnPoker(environment.Environment):
         print(self)
     # end def
 
+    # TODO: what is this for?
     def running(self):
         while not self.is_finished:
 

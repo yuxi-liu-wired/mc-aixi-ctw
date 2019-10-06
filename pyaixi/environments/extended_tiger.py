@@ -33,11 +33,10 @@ tiger_action_enum = util.enum('stand','listen','open_left_door','open_right_door
 tiger_observation_enum = util.enum('left','right','void')
 
 # Reward ranges from 0 to 130, encoded in 8 bits.
-# 0(-100) reward is given by choosing the worst action: open the door with tiger hiding behind
-# 90(-10) reward is given by choosing an 'invalid' action: e.g. stand while standing
-# 99(-1)  reward is given by choosing an 'valid' action: e.g. sitting -> stand
-# 130(30) reward is given by choosing the best action: open the door with gold behind
-# The agent should aim to achieve the 130 reward.
+# 0(-100) reward is given by choosing the worst action: open the door with tiger hiding behind.
+# 90(-10) reward is given by choosing an 'invalid' action: e.g. stand while standing.
+# 99(-1)  reward is given by choosing an 'valid' action: e.g. stand sitting.
+# 130(30) reward is given by choosing the best action: open the door with gold behind.
 tiger_reward_enum = util.enum(penalty = 90, eaten = 0, gold = 130, normal = 99)
 
 # 2 states, encoded in 1 bit.
@@ -88,6 +87,7 @@ class ExtendedTiger(environment.Environment):
     # By default, agent has 0.85 chance to hear the tiger.
     default_probability = 0.85
 
+
     # Instance methods.
 
     def __init__(self, options = {}):
@@ -112,13 +112,9 @@ class ExtendedTiger(environment.Environment):
         # Defines the acceptable reward values.
         self.valid_rewards = list(tiger_reward_enum.keys())
 
-        # Randomly initialize tiger location.
-        self.tiger = left if random.randint(0,1) == 1 else right
-
+        self.total_reward = 0 # restore temprory reward to display sum of reward of a single game run
+        self.restart()
         self.reward = 0
-        self.tmp_reward = 0 # restore temprory reward to display sum of reward of a single game run
-        self.state = sitting # Agent starts sitting.
-        self.observation = void
     # end def
 
     def perform_action(self, action):
@@ -136,8 +132,9 @@ class ExtendedTiger(environment.Environment):
                 self.reward = normal # Valid action reward.
                 # Randomly decide if the agent heard the tiger correctly.
                 if (random.random() < self.default_probability):
+                    # Heard it correctly.
                     self.observation = self.tiger
-                else:
+                else: # Heard it incorrectly.
                     if self.tiger == left:
                         self.observation = right
                     else:
@@ -152,42 +149,41 @@ class ExtendedTiger(environment.Environment):
                     self.reward = eaten
                 else:
                     self.reward = gold
-                self.clear_start()
+                self.restart()
             elif action == open_right:
                 if self.tiger == right:
                     self.reward = eaten
                 else:
                     self.reward = gold
-                self.clear_start()
+                self.restart()
             else: # Invalid action reward.
                 self.reward = penalty
             # end if
         # end if
 
-        self.tmp_reward += (self.reward - 100)
+        self.total_reward += (self.reward - 100)
         return (self.observation, self.reward)
     # end def
 
-    def clear_start(self):
+    def restart(self):
         """ Restarts the game.
         """
-
-        self.tmp_reward = 0
-        self.state = sitting
+        self.state = sitting # Agent starts sitting.
+        self.observation = void # Agent starts hearing nothing.
+        # Randomly initialize tiger location.
         self.tiger = left if random.randint(0,1) == 1 else right
-        print(f"Tiger is beind the :{self.tiger} door.")
 
     def print(self):
         """ Returns a string indicating the status of the environment.
         """
 
-        print("==" * 20)
-        print(f"Total Reward:{self.tmp_reward + self.reward-100}")
+        print("=" * 40)
+        print(f"Total Reward: {self.total_reward}")
         # Not able to show the last reward
 
-        print(f"Action Reward :{self.reward-100}")
-        print(f"State :{tiger_state_enum[self.state]}")
-        print(f"Actions :{tiger_action_enum[self.action]}")
+        print(f"Action Reward: {self.reward-100}")
+        print(f"State: {tiger_state_enum[self.state]}")
+        print(f"Actions: {tiger_action_enum[self.action]}")
         print(f"Tiger is at {tiger_observation_enum[self.tiger]}")
-        print(f"Observation : {tiger_observation_enum[self.observation]}")
+        print(f"Observation: {tiger_observation_enum[self.observation]}")
         print(self)

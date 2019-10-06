@@ -394,14 +394,12 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
     # end def
 
-    def generate_ctw_random_action(self,ctw):
+    # TODO: is this useful? It is not used anywhere in the project.
+    def generate_ctw_random_action(self, ctw):
+        ''' Generates a random action.
         '''
-        A learnt policy should perform much better towards UCT for playout operations.
-        '''
-        actions = [ self.encode_action(action)for action in self.environment.valid_actions]
-
+        actions = [self.encode_action(action) for action in self.environment.valid_actions]
         action = ctw.generate_random_actions(actions)
-
         return self.decode_action(action)
 
 
@@ -416,6 +414,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `horizon`: the number of complete action/percept steps
                          (the search horizon) to simulate.
         """
+
         assert self.environment.is_finished == False
 
         reward_sum = 0.0
@@ -450,6 +449,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # Use ρUCT to search for the next action.
+
         return mcts_planning(self, self.horizon, self.mc_simulations)
     # end def
 # end class

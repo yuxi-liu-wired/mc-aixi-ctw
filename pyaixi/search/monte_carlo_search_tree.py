@@ -155,6 +155,7 @@ class MonteCarloSearchNode:
             - `horizon`: how many steps into the future to sample
             - `iterations`: how many iterations to perform
         """
+
         agent.set_savestate()
         for i in range(iterations):
             self.sample(agent, horizon)
@@ -212,7 +213,6 @@ def mcts_planning(agent, horizon, iterations):
     """
     mc_tree = MonteCarloSearchNode(decision_node)
     mc_tree.sample_iterations(agent, horizon, iterations)
-
     best_action = max([(action,node.mean) for action,node in mc_tree.children.items()], key=lambda x: x[1])[0]
 
     return best_action

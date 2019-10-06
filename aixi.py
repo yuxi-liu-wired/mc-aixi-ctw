@@ -52,6 +52,8 @@ import random
 import sys
 import time
 
+from swap_enviroment import load # To swap environments
+
 # Insert the current directory into the system search path, so that this package can be
 # imported when this script is run directly from a release archive.
 PROJECT_ROOT = os.path.realpath(os.curdir)
@@ -106,13 +108,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
     # Agent/environment interaction loop.
     cycle = 1
 
-    #find out whether need to change enviroment during training
-
+    # Whether AIXI would face a second enviroment.
     second_enviroment_start_time = -1
-
-
     if "second_enviroment" in options:
-
         second_enviroment_start_time = options["second_enviroment"][1]
         second_enviroment_name = options["second_enviroment"][0]
 
@@ -122,13 +120,10 @@ def interaction_loop(agent = None, environment = None, options = {}):
             break
         # end if
 
-        #check whether need to swap the enviroments
-
-        if cycle == second_enviroment_start_time:
-            second_enviroment_start_time = - 1
-            from swap_enviroment import load
-            agent,environment = load(second_enviroment_name,agent,options)
-
+        if cycle == second_enviroment_start_time: # Time to swap environment.
+            second_enviroment_start_time = -1
+            agent, environment = load(second_enviroment_name, agent,options)
+        # end if
 
         # Save the current time to compute how long this cycle took.
         cycle_start = datetime.datetime.now()
@@ -203,7 +198,7 @@ def interaction_loop(agent = None, environment = None, options = {}):
         # Update exploration rate.
         if explore:
             explore_rate *= explore_decay
-        # end def
+        # end if
 
         # Update the cycle count.
         cycle += 1
