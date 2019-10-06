@@ -64,8 +64,8 @@ def performance_increase(file, name, reward):
     """ Graphs the performance increase.
 
         - `file`: .
-        - `name`:
-        - `reward`:
+        - `name`: Name of environment being studied
+        - `reward`: Boolean for something??
     """
 
     cycles, average_rewards = read(file, reward)
@@ -175,7 +175,7 @@ def main(argv):
             'e:c:p:i:v:n:g:t:',
             ['experimental_result=', 'conf_directory=',
              'performance_increase_graph=', 'interval_performance_increase_graph=',
-             'compare_performance_graph=', 'custom_name=', 'interval=', "type_of_reward", ]
+             'compare_performance_graph=', 'custom_name=', 'interval=', "type_of_reward"]
         )
         for opt, arg in opts:
 
@@ -195,8 +195,7 @@ def main(argv):
                 continue
 
             if opt in ('-i', '--interval_performance_increase_graph'):
-                command_line_options["interval_performance_increase"] = arg.split(
-                    "~")
+                command_line_options["interval_performance_increase"] = arg.split("~")
                 continue
 
             if opt in ('-v', '--compare_performance_graph'):
@@ -218,8 +217,7 @@ def main(argv):
     except getopt.GetoptError as e:
         usage()
 
-    # please give the directory that contains your conf file
-
+    # directory of configuration files
     if "conf_directory" in command_line_options:
         conf_directory = command_line_options["conf_directory"]
     else:
@@ -228,7 +226,7 @@ def main(argv):
     conf_path = parent_path + f"{sep}{conf_directory}"
     conf_files = [f for f in os.listdir(conf_path) if f.endswith(".conf")]
 
-    # where your store ur log information
+    # directory of output log files
     if "experimental_result" in command_line_options:
         experimental_result = command_line_options["experimental_result"]
     else:
@@ -236,9 +234,6 @@ def main(argv):
 
     if "experimental_result" not in os.listdir(parent_path):
         os.system(f"mkdir {experimental_result}")
-
-    # add different name for different running
-    # e.g custom_name = "1"
 
     if "custom_name" in command_line_options:
         custom_name = command_line_options["custom_name"]
@@ -255,13 +250,11 @@ def main(argv):
         running(conf_files, custom_name,
                 experimental_result, conf_directory, logging)
 
+    # TODO: what is this for
+    reward = True
     if "type_of_reward" in command_line_options:
-        if command_line_options["type_of_reward"] == default_options["type_of_reward"]:
-            reward = True
-        else:
+        if command_line_options["type_of_reward"] != default_options["type_of_reward"]:
             reward = False
-    else:
-        reward = True
 
     if "performance_increase" in command_line_options:
         path = command_line_options["performance_increase"][0]
@@ -282,6 +275,7 @@ def main(argv):
         # ["experimental_result/coin_flip.log","experimental_result/coin_flip_v1.log"]
         paths = sorted([f"{directory}{sep}{f}" for f in os.listdir(
             directory) if f.endswith(".log")])
+        print(command_line_options["compare_performance"])
         names = eval(command_line_options["compare_performance"][1])
         title = str(command_line_options["compare_performance"][2])
         # ["coin flip","coin flip compare"]
@@ -290,21 +284,21 @@ def main(argv):
 
 
 def usage():
-    message = "Usage: python experimental_script.py [-e | --experimental_result" + os.linesep + \
-              "                                     [-c | --conf_directory" + os.linesep + \
+    message = "Usage: python experimental_script.py [-e | --experimental_result <directory name of experimental result log files>" + os.linesep + \
+              "                                     [-c | --conf_directory <directory name of configuration files>" + os.linesep + \
               "                                     [-p | --performance_increase_graph" + os.linesep + \
               "                                     [-i | --interval_performance_increase_graph" + os.linesep + \
               "                                     [-v | --compare_performance_graph" + os.linesep + \
-              "                                     [-n | --custom_name" + os.linesep + \
+              "                                     [-n | --custom_name <suffix string of log files>" + os.linesep + \
               "                                     [-g | --interval" + os.linesep +\
               "Usage examples:" + os.linesep +\
               '''     python experimental_script.py  -c experimental_conf -n test -e experimental_result''' + os.linesep +\
-              '''     python experimental_script.py  -v experimental_result~"['coin flip','coin flip compare']"~'coin flip' -g 10 ''' + os.linesep +\
-              '''     python experimental_script.py  -i 'experimental_result/coin_flip.log'~'coin flip' -g 10''' + os.linesep +\
+              '''     python experimental_script.py  -v "experimental_result~['coin flip','coin flip compare']~coin flip" -g 10 ''' + os.linesep +\
+              '''     python experimental_script.py  -i "experimental_result/coin_flip.log~coin flip" -g 10''' + os.linesep +\
               '\n' +\
               "     The performance increase function expects 2 inputs, file and tile, separated by '~'" + os.linesep +\
               "     Including any space without quotation marks '' may lead to an error. " + os.linesep +\
-              "     To output performance comparison graph, input the labels of the alphabetical order of the log file" + os.linesep
+              "     To output performance comparison graph, input the labels of the log file in alphabetical order" + os.linesep
 
     sys.stderr.write(message)
     sys.exit(2)
