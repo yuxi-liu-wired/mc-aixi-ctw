@@ -86,12 +86,12 @@ class Environment:
         def __str__(self):
             return self.__unicode__().encode('utf8')
         # end def
-    # end def
+    # end if
 
     def is_valid_action(self, action):
         """ Returns whether the given action is valid.
         """
-        # TODO: implement
+
         if(action in self.valid_actions):
             return True
         else:
@@ -101,7 +101,7 @@ class Environment:
     def is_valid_observation(self, observation):
         """ Returns whether the given observation is valid.
         """
-        # TODO: implement
+
         if(observation in self.valid_observations):
             return True
         else:
@@ -111,7 +111,7 @@ class Environment:
     def is_valid_reward(self, reward):
         """ Returns whether the given reward is valid.
         """
-        # TODO: implement
+
         if(reward in self.valid_rewards):
             return True
         else:
@@ -122,7 +122,6 @@ class Environment:
         """ Returns the maximum possible action.
         """
 
-        # TODO: implement
         return max(self.valid_actions)
     # end def
 
@@ -138,7 +137,6 @@ class Environment:
         """ Returns the maximum possible reward.
         """
 
-        # TODO: implement
         return max(self.valid_rewards)
     # end def
 
@@ -146,7 +144,6 @@ class Environment:
         """ Returns the minimum possible action.
         """
 
-        # TODO: implement
         return min(self.valid_actions)
     # end def
 
@@ -154,7 +151,6 @@ class Environment:
         """ Returns the minimum possible observation.
         """
 
-        # TODO: implement
         return min(self.valid_observations)
     # end def
 
@@ -162,7 +158,6 @@ class Environment:
         """ Returns the minimum possible reward.
         """
 
-        # TODO: implement
         return min(self.valid_rewards)
     # end def
 
@@ -170,10 +165,8 @@ class Environment:
         """ Returns the maximum number of bits required to represent an action.
         """
 
-        # TODO: implement
-        
         actions = [util.bits_required(action) for action in self.valid_actions]
-        
+
         return max(actions)
     # end def
 
@@ -181,16 +174,15 @@ class Environment:
         """ Returns the maximum number of bits required to represent an observation.
         """
 
-        # TODO: implement
         observations = [util.bits_required(obs) for obs in self.valid_observations]
-        
+
         return max(observations)
     # end def
 
     def percept_bits(self):
         """ Returns the maximum number of bits required to represent a percept.
         """
-        # TODO: implement
+
         return self.observation_bits()+self.reward_bits()
     # end def
 
@@ -198,21 +190,20 @@ class Environment:
         """ Returns the maximum number of bits required to represent a reward.
         """
 
-        # TODO: implement
         return util.bits_required(self.reward)
     # end def
 
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
-        # TODO: implement
+
         self.action = action
     # end def
 
     def print(self):
         """ String representation convenience method from the C++ version.
         """
-        # TODO: implement
+
         return None
     # end def
 

@@ -370,11 +370,11 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `observation`: the observation that was received.
             - `reward`: the reward that was received.
         """
-        
+
         # The last update must have been an action, else this percept update is invalid.
         assert self.last_update == action_update, "Can only perform a percept update after an action update."
 
-        # Update the internal model after performing a percept.
+        # Update the internal model after receiving a percept.
 
         # Get the symbols that represent this percept from the given observation and reward.
         percept_symbols = self.encode_percept(observation, reward)
@@ -391,20 +391,20 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update other properties.
         self.total_reward += reward
         self.last_update = percept_update
-        
+
     # end def
-    
+
     def generate_ctw_random_action(self,ctw):
         '''
         A learnt policy should perform much better towards UCT for playout operations.
         '''
         actions = [ self.encode_action(action)for action in self.environment.valid_actions]
-        
+
         action = ctw.generate_random_actions(actions)
-        
+
         return self.decode_action(action)
-        
-        
+
+
     def playout(self, horizon):
         """ Simulates agent/enviroment interaction for a specified amount of steps
             (the given horizon value) where the agent actions are chosen uniformly
@@ -417,9 +417,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
                          (the search horizon) to simulate.
         """
         assert self.environment.is_finished == False
-        
+
         reward_sum = 0.0
-        
+
         for i in range(horizon):
             if self.environment.is_finished:
                 break
@@ -429,7 +429,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             _, reward = self.generate_percept_and_update()
             reward_sum += reward
         # end for
-        
+
         return reward_sum
     # end def
 

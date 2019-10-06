@@ -83,7 +83,7 @@ def encode(integer_symbol, bit_count):
     # Check that the number of bits is not bigger than the given bit count.
     bits_length = len(bits)
     assert bit_count >= bits_length, \
-           "The given number of bits %d to encode is smaller than the bits needed to encode %d." % \
+           "The given %d bits to encode with is not enough to encode %d bits." % \
                (bit_count, bits_length)
 
     # Calculate how many bits we need to pad the bit string with, if any, and pad with zeros.
