@@ -143,7 +143,7 @@ def interaction_loop(agent = None, environment = None, options = {}):
         # end if
 
         # Update the agent's environment model with the new percept.
-        agent.model_update_percept(observation, reward) # TODO: implement
+        agent.model_update_percept(observation, reward)
 
         # Determine best exploitive action, or explore.
         explored = False
@@ -163,14 +163,14 @@ def interaction_loop(agent = None, environment = None, options = {}):
                 # Tell the user we're not exploring, we're trying to choose the best action.
                 print("Agent is trying to choose the best action, which may take some time...")
             # end if
-            action = agent.search() # TODO: implement
+            action = agent.search()
         # end def
 
         # Send the action to the environment.
         environment.perform_action(action)
 
         # Update the agent's environment model with the chosen action.
-        agent.model_update_action(action) # TODO: implement
+        agent.model_update_action(action)
 
         # Calculate how long this cycle took.
         time_taken = datetime.datetime.now() - cycle_start
@@ -182,7 +182,6 @@ def interaction_loop(agent = None, environment = None, options = {}):
                    agent.total_reward, agent.average_reward(),
                    str(time_taken), agent.model_size())
         print(message)
-        # TODO: implement
 
 
         # Print to standard output when cycle == 2^n or on verbose option.
@@ -489,7 +488,7 @@ def usage():
     """ Prints usage information.
     """
 
-    message = "Usage: python aixi.py [-a | --agent <agent module name>" + os.linesep + \
+    message = "Usage: python aixi.py [-a | --agent <agent module name>]" + os.linesep + \
               "                      [-d | --explore-decay <exploration decay value, between 0 and 1>]" + os.linesep + \
               "                      [-e | --environment <environment module name>]" + os.linesep + \
               "                      [-h | --agent-horizon <search horizon>]" + os.linesep + \

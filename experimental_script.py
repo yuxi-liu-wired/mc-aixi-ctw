@@ -284,13 +284,13 @@ def main(argv):
 
 
 def usage():
-    message = "Usage: python experimental_script.py [-e | --experimental_result <directory name of experimental result log files>" + os.linesep + \
-              "                                     [-c | --conf_directory <directory name of configuration files>" + os.linesep + \
-              "                                     [-p | --performance_increase_graph" + os.linesep + \
-              "                                     [-i | --interval_performance_increase_graph" + os.linesep + \
-              "                                     [-v | --compare_performance_graph" + os.linesep + \
-              "                                     [-n | --custom_name <suffix string of log files>" + os.linesep + \
-              "                                     [-g | --interval" + os.linesep +\
+    message = "Usage: python experimental_script.py [-e | --experimental_result <directory name of experimental result log files>]" + os.linesep + \
+              "                                     [-c | --conf_directory <directory name of configuration files>]" + os.linesep + \
+              "                                     [-p | --performance_increase_graph]" + os.linesep + \
+              "                                     [-i | --interval_performance_increase_graph]" + os.linesep + \
+              "                                     [-v | --compare_performance_graph]" + os.linesep + \
+              "                                     [-n | --custom_name <suffix string of log files>]" + os.linesep + \
+              "                                     [-g | --interval]" + os.linesep +\
               "Usage examples:" + os.linesep +\
               '''     python experimental_script.py  -c experimental_conf -n test -e experimental_result''' + os.linesep +\
               '''     python experimental_script.py  -v "experimental_result~['coin flip','coin flip compare']~coin flip" -g 10 ''' + os.linesep +\
