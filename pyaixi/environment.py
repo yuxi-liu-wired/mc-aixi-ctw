@@ -203,7 +203,7 @@ class Environment:
     def print(self):
         """ String representation convenience method from the C++ version.
         """
-
+        print('what ')
         return None
     # end def
 

@@ -13,6 +13,7 @@ from pyaixi import environment, util
 import os
 import random
 import sys
+import inspect
 import numpy as np
 
 # Insert the package's parent directory into the system search path, so that this
@@ -203,7 +204,6 @@ class PacMan(environment.Environment):
         """
 
         # based on https://stackoverflow.com/questions/50499/how-do-i-get-the-path-and-name-of-the-file-that-is-currently-executing
-        import inspect
         sep = '/' if '/' in PROJECT_ROOT else '\\'
         path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + sep + layout
 
@@ -556,7 +556,6 @@ class PacMan(environment.Environment):
     def print(self):
         """ Returns a string indicating the status of the environment.
         """
-
         print("=" * 40)
         print(f"Reward: {self.reward}")
         print(f"Super Pacman time remaining: {self.super_pacman_time}")

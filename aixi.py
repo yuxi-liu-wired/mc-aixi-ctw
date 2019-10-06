@@ -192,7 +192,7 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
         # Print environment state if verbose option is true.
         if verbose:
-              print(environment.print())
+            environment.print()
         # end if
 
         # Update exploration rate.
