@@ -16,12 +16,12 @@ import sys
 
 
 
-def running(conf_files,custom_name,experimental_result,conf_director,logging):
+def running(conf_files,custom_name,experimental_result,conf_directory,logging):
     
     '''
     call running to generate the system log files,
-    please gives correct director of the conf files,
-    also gives the director where to store the
+    please gives correct directory of the conf files,
+    also gives the directory where to store the
     system log
 
     '''
@@ -30,7 +30,7 @@ def running(conf_files,custom_name,experimental_result,conf_director,logging):
         result = conf_file[:conf_file.index(".")] + "_" + custom_name + ".log"
         if result in os.listdir(f"{parent_path}{sep}{experimental_result}"):
             os.system(f"rm {experimental_result}{sep}{result}")
-        os.system(f"python aixi.py -v {conf_director}{sep}{conf_file} " + logging + result)
+        os.system(f"python aixi.py -v {conf_directory}{sep}{conf_file} " + logging + result)
         
         
         
@@ -121,10 +121,10 @@ sep = "/" if "sep" in parent_path else '''/'''
 
 default_options = {}
 default_options["experimental_result"]           = "experimental_result"
-default_options["conf_director"]                 =  "experimental_conf"
+default_options["conf_directory"]                 =  "experimental_conf"
 default_options["custom_name"]                   =  str(time.time())
 default_options["interval"]                      =  50
-default_options["type_of_reward"]                      =  "reward"
+default_options["type_of_reward"]                =  "reward"
     
 command_line_options = {}
     
@@ -135,7 +135,7 @@ def main(argv):
         opts, args = getopt.gnu_getopt(
                     argv,
                     'e:c:p:i:v:n:g:t:',
-                    ['experimental_result=', 'conf_director=',
+                    ['experimental_result=', 'conf_directory=',
                      'performance_inrease_graph=','interval_performance_inrease_graph=',
                      'compare_performance_graph=','custom_name=','interval=',"type_of_reward",]
                     )
@@ -148,8 +148,8 @@ def main(argv):
                 command_line_options["experimental_resul"] = str(arg)
                 continue
             
-            if opt in ('-c', '--conf_director'):
-                command_line_options["conf_director"] = str(arg)
+            if opt in ('-c', '--conf_directory'):
+                command_line_options["conf_directory"] = str(arg)
                 continue
             
             
@@ -184,13 +184,13 @@ def main(argv):
     
     #please give the director that contains your conf file
 
-    if "conf_director" in command_line_options:
-        conf_director = command_line_options["conf_director"]
+    if "conf_directory" in command_line_options:
+        conf_directory = command_line_options["conf_directory"]
     
     else:
-        conf_director = default_options["conf_director"]
+        conf_directory = default_options["conf_directory"]
     
-    conf_path = parent_path + f"{sep}{conf_director}"
+    conf_path = parent_path + f"{sep}{conf_directory}"
     conf_files = [f for f in os.listdir(conf_path) if f.endswith(".conf")]
     
     #where your store ur log information
@@ -223,7 +223,7 @@ def main(argv):
         
     if "running" in command_line_options and command_line_options["running"]:
         logging = f"| tee -a {experimental_result}{sep}"
-        running(conf_files,custom_name,experimental_result,conf_director,logging)
+        running(conf_files,custom_name,experimental_result,conf_directory,logging)
         
     if "type_of_reward" in command_line_options:
         
@@ -265,7 +265,7 @@ def main(argv):
         
 def usage():
     message = "Usage: python experimental_script.py [-e | --experimental_result" + os.linesep + \
-              "                                     [-c | --conf_director" + os.linesep + \
+              "                                     [-c | --conf_directory" + os.linesep + \
               "                                     [-p | --performance_inrease_graph" + os.linesep + \
               "                                     [-i | --interval_performance_inrease_graph" + os.linesep + \
               "                                     [-v | --compare_performance_graph" + os.linesep + \
