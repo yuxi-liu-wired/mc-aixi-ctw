@@ -144,8 +144,8 @@ def main(argv):
             if opt == '--help':
                 usage()
             
-            if opt in ('-e', '--experimental_resul'):
-                command_line_options["experimental_resul"] = str(arg)
+            if opt in ('-e', '--experimental_result'):
+                command_line_options["experimental_result"] = str(arg)
                 continue
             
             if opt in ('-c', '--conf_directory'):
@@ -221,7 +221,7 @@ def main(argv):
         interval = default_options["interval"]
         
         
-    if "running" in command_line_options and command_line_options["running"]:
+    if "experimental_result" in command_line_options:
         logging = f"| tee -a {experimental_result}{sep}"
         running(conf_files,custom_name,experimental_result,conf_directory,logging)
         
