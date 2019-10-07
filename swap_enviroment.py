@@ -9,6 +9,17 @@ from pyaixi.environment import Environment
 from pyaixi.environments import *
 import inspect 
 
+
+'''
+
+example of swap between environment, run the command below in terminal
+python aixi.py -v conf/kuhn_poker.conf -s extended_tiger,100
+you need to specify the time to run second environment and name of second environment
+please follow  -s <name of second enviroment,time to run second environment>
+
+
+'''
+
 def load(environment_title,agent,options):
     
     environment_package_name = "pyaixi.environments." + environment_title
