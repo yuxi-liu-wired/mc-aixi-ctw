@@ -36,6 +36,12 @@ def running(conf_files,custom_name,experimental_result,conf_directory,logging):
         
         
 def read(file,reward):
+    '''
+    read the log file and specify which type of reward to read
+    if reward is true, then we read reward,
+    otherwise we read average reward.
+    
+    '''
     cycles = []
     average_rewards = []
     with open(file) as f:
@@ -58,6 +64,10 @@ def read(file,reward):
         return cycles, average_rewards
 
 def performance_inrease(file,name,reward):
+    '''
+    perfomrmance inrease graph
+    
+    '''
     cycles,average_rewards = read(file,reward)
     num = int(len(cycles)/10)
     plt.figure(figsize=(9, 6)) 
@@ -73,6 +83,10 @@ def performance_inrease(file,name,reward):
 
 
 def smooth(cycles,average_rewards,num):
+    '''
+    calculate time interval based average reward
+    
+    '''
     interval = int(len(cycles)/num)
     smoothed_cycles = [cycles[0]]
     smoothed_average_rewards = [average_rewards[0]]
@@ -86,6 +100,12 @@ def smooth(cycles,average_rewards,num):
     return smoothed_cycles,smoothed_average_rewards
 
 def interval_performance_inrease(file,name,num,reward):
+    
+    '''
+    Generate graph about change of reward based on time interval.
+    
+    '''
+    
     cycles,average_rewards = read(file,reward)
     smoothed_cycles,smoothed_average_rewards = smooth(cycles,average_rewards,num)
     plt.figure(figsize=(9, 6)) 
@@ -99,6 +119,12 @@ def interval_performance_inrease(file,name,num,reward):
 
 
 def compare_performance(files,names,num,compare_name,reward):
+    
+    '''
+    Generate the graph with based on list of conf files. In order to find out 
+    the performance change with respect to different configurations.
+    
+    '''
     
     plt.figure(figsize=(9, 6)) 
     for index in range(len(files)):
@@ -130,6 +156,38 @@ command_line_options = {}
     
 
 def main(argv):
+    
+    '''
+    experimental_result: The folder to store the experimental result. 
+        The script will create it if there doesn't existes one.
+        And, all information is stored as log file.  
+    
+    conf_director: The folder contains the different configure files.
+        Only the file endup with ".conf" will be experimented.
+    
+    performance_inrease_graph: Reading the specifed log file, and generate a single graph about reward.
+        The format for setting the parameter is < log file >$\text{~}$<'title of the graph'>  
+    
+    interval_performance_inrease_graph: Reading the specifed log file, 
+        and generate a single smoothed graph about the average reward.
+        The interval can be set by using interval parameter. 
+        And, the format for setting the parameter is 
+        < log file >$\text{~}$<'title of the graph'>
+    
+    compare_performance_graph: By supplying the director, it will reading a list of log file. 
+        Then, generate the graph for them. The format to giving the value is 
+        < where store the log files >$\text{~}$<"['name of labels',]">$\text{~}$<'title of graph'>. 
+        Be careful, the order for the name of labels need to corresponds with the alphabeta order of log files.
+    
+    custom_name: The log file for different configure files wil be stored as the name of configure file plus the custom_name. 
+        if no custom name is supplied, the current time will be considered as custom name. 
+    
+    interval: In order to smooth the history reward, the interval need to be supplied.
+        The default value will be 50.
+    
+    type of reward: Used to indicate whether we should read average reward or reward from the log file.
+    
+    '''
 
     try:
         opts, args = getopt.gnu_getopt(
@@ -155,14 +213,20 @@ def main(argv):
             
             if opt in ('-p', '--performance_inrease_graph'):
                 command_line_options["performance_inrease"] = arg.split("~")
+                if len(arg.split("~"))!= 2:
+                    raise SystemExit("incorrect input")
                 continue
             
             if opt in ('-i', '--interval_performance_inrease_graph'):
                 command_line_options["interval_performance_inrease"] = arg.split("~")
+                if len(arg.split("~"))!= 2:
+                    raise SystemExit("incorrect input")
                 continue
             
             if opt in ('-v', '--compare_performance_graph'):
                 command_line_options["compare_performance"] = arg.split("~")
+                if len(arg.split("~"))!= 3:
+                    raise SystemExit("incorrect input")
                 continue
             
             
@@ -271,10 +335,12 @@ def usage():
               "                                     [-v | --compare_performance_graph" + os.linesep + \
               "                                     [-n | --custom_name" + os.linesep + \
               "                                     [-g | --interval" + os.linesep +\
+              "                                     [-t | --type_of_reward" + os.linesep +\
               "Example of Usage" + os.linesep +\
               '''     python experimental_script.py  -c experimental_conf -n test -e experimental_result''' + + os.linesep +\
               '''     python experimental_script.py  -v experimental_result~"['coin flip','coin flip compare']"~'coin flip' -g 10 ''' + os.linesep +\
-              '''     python experimental_script.py  -i 'experimental_result/coin_flip.log'~'coin flip' -g 10''' + os.linesep +\
+              '''     python experimental_script.py  -i 'experimental_result/coin_flip.log'~'coin flip' -g 10 ''' + os.linesep +\
+              '''     python experimental_script.py  -p experimental_result/coin_flip.log~'coin flip' -t avg '''  + os.linesep +\
               "     The performance increase function expect 2 inputs, file and tile, please using ~ to split your inputs" + os.linesep +\
               "     Include any space without using '' may leads a error. " + os.linesep +\
               "     For the  compare performance graph please given the names of label correspond with the alphabeta order of log file" + os.linesep

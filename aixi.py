@@ -308,7 +308,7 @@ def main(argv):
                 command_line_options["exploration"] = float(arg)
                 continue
             # end if
-            if opt in ('-s', '--swap'):
+            if opt in ('-s', '--second'):
                 second_enviroment =  arg.split(",")[0]
                 start_time        =  arg.split(",")[1]
                 command_line_options["second_enviroment"] = [str(second_enviroment),int(start_time)]
@@ -495,6 +495,7 @@ def usage():
               "                      [-t | --ct-depth <maximum depth of predicting context tree>]" + os.linesep + \
               "                      [-x | --exploration <exploration factor, greater than 0>]" + os.linesep + \
               "                      [-v | --verbose]" + os.linesep + \
+               "                     [-s | --second <second enviroment need to be run,time to change>]" + os.linesep + \
               "                      [<configuration file name to load>]" + os.linesep + os.linesep
 
     sys.stderr.write(message)
