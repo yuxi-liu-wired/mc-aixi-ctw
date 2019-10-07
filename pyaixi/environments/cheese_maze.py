@@ -45,27 +45,26 @@ twelve = cheese_maze_observation_enum.twelve
 alias_setting = {(1,1):nine, (1,2):ten, (1,3):eight, (1,4):ten, (1,5):twelve
                  ,(2,1):five, (2,3):five, (2,5):five, (3,1):seven, (3,3):seven, (3,5):seven}
 # read maze file
-def readMazeFile():
-    layout = "cheese_maze.txt"
-    sep = '/' if '/' in PROJECT_ROOT else ''''\''''
-    import inspect
-    path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + sep + layout
-    
-    # Setting up coordinates for maze
-    coordinator = {}
-    
-    with open(path) as f:
-        row = 0
-        col = 0
-    
-        for line in f:
-            for s in list(line.rstrip()):
-                if s == "%":
-                    coordinator[(row,col)] = s
-                else:
-                    coordinator[(row,col)] = alias_setting[(row,col)]
-                col=((col+1)%7)
-            row+=1
+layout = "cheese_maze.txt"
+sep = '/' if '/' in PROJECT_ROOT else ''''\''''
+import inspect
+path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + sep + layout
+
+# Setting up coordinates for maze
+coordinator = {}
+
+with open(path) as f:
+    row = 0
+    col = 0
+
+    for line in f:
+        for s in list(line.rstrip()):
+            if s == "%":
+                coordinator[(row,col)] = s
+            else:
+                coordinator[(row,col)] = alias_setting[(row,col)]
+            col=((col+1)%7)
+        row+=1
         
 class CheeseMaze(environment.Environment):
     """ A mouse and a cheese are in the same two-dimensional 7x5 maze. The task
@@ -89,8 +88,8 @@ class CheeseMaze(environment.Environment):
     def __init__(self, options = {}):
         # Set up the base environment.
         environment.Environment.__init__(self, options = options)
-        self.maze = readMazeFile() # maze contains dcitionary of the environment
-        
+        self.maze = coordinator # maze contains dcitionary of the environment
+
         self.cheese = (3,3) # permanent address of cheese
         
         # Defines the acceptable action values.
