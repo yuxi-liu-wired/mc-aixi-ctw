@@ -182,7 +182,7 @@ def main(argv):
         usage()
         
     
-    #please give the director that contains your conf file
+    #please give the directory that contains your conf file
 
     if "conf_directory" in command_line_options:
         conf_directory = command_line_options["conf_directory"]
@@ -230,6 +230,7 @@ def main(argv):
         if command_line_options["type_of_reward"] == default_options["type_of_reward"]:
             reward = True
         else:
+            #put in any string to get average reward instead of reward
             reward = False
         
     else:
