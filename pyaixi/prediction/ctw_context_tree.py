@@ -337,11 +337,9 @@ class CTWContextTree:
         self.depth = depth
 
         # we only need depth-context at most, for safely reasons,
-        # I add a constant, in order for that after revert operations,
-        # we still get enough context, in our implementation we donot using revert 
-        # in mc_aixi_ctw, we store the history as part of undo_mc_aixi_ctw. If you
-        # need full history or your have sufficient memory, please remove the max length
-        # constraints for the deque object which is the second argument below.
+        # we consider the maximum bits need for mcts 
+        # we can use this appraoch to save 
+        # and speed up our algorithm
         
         if not estimate_size:
             estimate_size = 1000000000000
