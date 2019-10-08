@@ -25,7 +25,7 @@ from __future__ import unicode_literals
 
 import os
 import sys
-
+import gc 
 import six.moves.configparser as configparser
 
 try:
@@ -212,6 +212,11 @@ def interaction_loop(agent = None, environment = None, options = {}):
               "average reward: %f" % agent.average_reward()
 
     print(message)
+    
+    
+    if cycle%100 == 0:
+        gc.collect()
+        
 # end def
 
 def main(argv):
