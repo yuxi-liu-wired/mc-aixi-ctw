@@ -204,6 +204,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
         # Update the cycle count.
         cycle += 1
+        
+        if cycle%100 == 0:
+            gc.collect()
     # end while
 
     # Print summary to standard output.
@@ -213,9 +216,7 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
     print(message)
     
-    
-    if cycle%100 == 0:
-        gc.collect()
+
         
 # end def
 
