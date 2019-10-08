@@ -166,7 +166,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
         # Update the agent's environment model with the chosen action.
         agent.model_update_action(action)
-
+        
+        agent.bits_changed  = 0
+        
         # Calculate how long this cycle took.
         time_taken = datetime.datetime.now() - cycle_start
 

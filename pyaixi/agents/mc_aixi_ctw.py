@@ -127,10 +127,30 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         assert 'ct-depth' in options, \
                "The required 'ct-depth' context tree depth option is missing from the given options."
         self.depth = int(options['ct-depth'])
-
+        
+        # estimate how many bits we need to keep in history of ctw at most
+        # each iterations of mc search takes horizon * (actions bits + percept-bits)
+        # and generating the perceptio need to update and revert. 
+        # for the safely reason, I make it slight larger.
+        
+        try:
+            
+            estimate_bits = (options["action-bits"] + options["percept-bits"]) * \
+                                int(options['agent-horizon']) * 5
+                   
+        except KeyError:
+            
+            estimate_bits = None
+        
         # (CTW) Context tree representing the agent's model of the environment.
         # Created for this instance.
-        self.context_tree = ctw_context_tree.CTWContextTree(self.depth)
+        
+        self.context_tree = ctw_context_tree.CTWContextTree(self.depth,estimate_bits)
+        
+        # using the length difference of history size wouldnt work know,
+        # as the maximum length of history wouldnt change, all we can do is
+        # recoding how many bits changed during the mcts.
+        self.bits_changed = 0
 
         # The length of the agent's planning horizon.
         # Retrieved from the given options under 'agent-horizon'. Mandatory.
@@ -262,9 +282,12 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         assert self.last_update == action_update,  "Can only perform a percept update after an action update."
-        observation, reward = self.generate_percept()
-        self.model_update_percept(observation, reward)
-        # Note that this would cause learning iff the agent is still learning
+        percept_symbol = self.context_tree.generate_random_symbols_and_update(self.environment.percept_bits())
+        observation, reward = self.decode_percept(percept_symbol)
+        self.bits_changed += len(percept_symbol)
+        self.total_reward += reward
+        self.last_update = percept_update
+        
         return observation, reward
     # end def
 
@@ -317,11 +340,16 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.age = undo_instance.age
         self.total_reward = undo_instance.total_reward
         self.last_update = undo_instance.last_update
-
+        
+        self.context_tree.revert(self.bits_changed)
+        self.bits_changed = 0
+        
+        '''
         old_history_size = undo_instance.history_size
         current_history_size = self.history_size()
         if current_history_size > old_history_size:
             self.context_tree.revert(current_history_size - old_history_size)
+       '''
     # end def
 
     def set_savestate(self):
@@ -358,6 +386,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Update the context tree.
         self.context_tree.update(action_symbols)
 
+        self.bits_changed += len(action_symbols)
+        
         # Update other properties.
         self.age += 1
         self.last_update = action_update
@@ -386,6 +416,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         else:
             # Yes. Update and learn.
             self.context_tree.update(percept_symbols)
+            
+            #self.bits_changed += len(percept_symbols)
         # end if
 
         # Update other properties.

@@ -13,7 +13,9 @@ import random
 
 # Ensure xrange is defined on Python 3.
 from six.moves import xrange
-
+from collections import deque
+from copy import deepcopy
+from numba import jit
 # The value ln(0.5).
 # This value is used often in computations and so is made a constant for efficiency reasons.
 log_half = math.log(0.5)
@@ -161,7 +163,7 @@ class CTWContextTreeNode:
     def revert(self, symbol):
         """ Reverts the node to its state immediately prior to the last update.
             This involves updating the symbol counts, recalculating the cached
-            probabilities, and deleting unnecessary child nodes.
+            probabilities. 
 
             - `symbol`: the symbol used in the previous update.
         """
@@ -186,7 +188,7 @@ class CTWContextTreeNode:
         # Iterate over the direct children of this node, collecting the size of each sub-tree.
         return 1 + sum([child.size() for child in self.children.values()])
     # end def
-
+    
     def update(self, symbol):
         """ Updates the node after having observed a new symbol.
             This involves updating the symbol counts and recalculating the cached probabilities.
@@ -285,7 +287,7 @@ class CTWContextTree_Undo:
     def __init__(self, tree):
         
         for field,value in tree.__dict__.items():
-            exec("self.field = value")
+            exec("self.field = deepcopy(value)")
 
 class CTWContextTree:
     """ The high-level interface to an action-conditional context tree.
@@ -318,7 +320,7 @@ class CTWContextTree:
            sampling.
     """
 
-    def __init__(self, depth):
+    def __init__(self, depth, estimate_size = None):
         """ Create a context tree of specified maximum depth.
             Nodes are created as needed.
 
@@ -334,8 +336,19 @@ class CTWContextTree:
         assert depth >= 0, "The given tree depth must be greater than zero."
         self.depth = depth
 
-        # The history (a list) of symbols seen by the tree.
-        self.history = []
+        # we only need depth-context at most, for safely reasons,
+        # I add a constant, in order for that after revert operations,
+        # we still get enough context, in our implementation we donot using revert 
+        # in mc_aixi_ctw, we store the history as part of undo_mc_aixi_ctw. If you
+        # need full history or your have sufficient memory, please remove the max length
+        # constraints for the deque object which is the second argument below.
+        
+        if not estimate_size:
+            estimate_size = 1000000000000
+            
+        self.size_of_history  = estimate_size + depth
+        
+        self.history = deque([],self.size_of_history)
 
         # The root node of the context tree.
         self.root = CTWContextTreeNode(tree = self)
@@ -372,7 +385,7 @@ class CTWContextTree:
         """
 
         # Reset the history.
-        self.history = []
+        self.history = deque([],self.size_of_history)
 
         # Set a new root object, and reset the tree size.
         self.root.tree = None
@@ -528,9 +541,7 @@ class CTWContextTree:
         # because of the dependency relationships.
         for step in range(symbol_count):
             
-            bit = self.history[-1]
-            
-            self.history = self.history[:-1]
+            bit = self.history.pop()
             
             self.update_context()
             
@@ -549,7 +560,7 @@ class CTWContextTree:
         assert history_length >= symbol_count, "The given symbol count must be greater than the history length."
 
         new_size = history_length - symbol_count
-        self.history = self.history[:new_size]
+        self.history = deque(list(self.history)[:new_size],self.size_of_history)
     # end def
 
     def size(self):
@@ -630,7 +641,7 @@ class CTWContextTree:
         context = [self.root]
         last_node = self.root
         
-        for bit in reversed(self.history[-self.depth:]):
+        for bit in reversed(list(self.history)[-self.depth:]):
             
             # if value is 1, go left branch, otherwise right branch
             index = 1 if bit else 0
