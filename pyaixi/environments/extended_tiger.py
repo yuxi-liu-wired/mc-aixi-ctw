@@ -112,7 +112,7 @@ class ExtendedTiger(environment.Environment):
         # Defines the acceptable reward values.
         self.valid_rewards = list(tiger_reward_enum.keys())
 
-        self.total_reward = 0 # restore temprory reward to display sum of reward of a single game run
+#        self.total_reward = 0 # restore temprory reward to display sum of reward of a single game run
         self.restart()
         self.reward = 0
     # end def
@@ -161,7 +161,7 @@ class ExtendedTiger(environment.Environment):
             # end if
         # end if
 
-        self.total_reward += (self.reward - 100)
+#        self.total_reward += (self.reward - 100)
         return (self.observation, self.reward)
     # end def
 
@@ -173,17 +173,17 @@ class ExtendedTiger(environment.Environment):
         # Randomly initialize tiger location.
         self.tiger = left if random.randint(0,1) == 1 else right
 
-    def print(self):
-        """ Returns a string indicating the status of the environment.
-        """
-
-        print("=" * 40)
-        print(f"Total Reward: {self.total_reward}")
-        # Not able to show the last reward
-
-        print(f"Action Reward: {self.reward-100}")
-        print(f"State: {tiger_state_enum[self.state]}")
-        print(f"Actions: {tiger_action_enum[self.action]}")
-        print(f"Tiger is at {tiger_observation_enum[self.tiger]}")
-        print(f"Observation: {tiger_observation_enum[self.observation]}")
-        print(self)
+#    def print(self):
+#        """ Returns a string indicating the status of the environment.
+#        """
+#
+#        print("=" * 40)
+#        print(f"Total Reward: {self.total_reward}")
+#        # Not able to show the last reward
+#
+#        print(f"Action Reward: {self.reward-100}")
+#        print(f"State: {tiger_state_enum[self.state]}")
+#        print(f"Actions: {tiger_action_enum[self.action]}")
+#        print(f"Tiger is at {tiger_observation_enum[self.tiger]}")
+#        print(f"Observation: {tiger_observation_enum[self.observation]}")
+#        print(self)

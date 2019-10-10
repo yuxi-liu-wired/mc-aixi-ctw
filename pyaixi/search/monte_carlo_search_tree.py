@@ -73,7 +73,7 @@ class MonteCarloSearchNode:
     # Class attributes.
 
     # Exploration constant for the UCB action policy.
-    exploration_constant = 2.0
+    exploration_constant = math.sqrt(2.0)
 
     # Instance methods.
 
@@ -152,7 +152,6 @@ class MonteCarloSearchNode:
         for i in range(iterations):
             self.sample(agent, horizon)
             agent.restore_savestate()
-
     # end def
 
     def select_action(self, agent, horizon):

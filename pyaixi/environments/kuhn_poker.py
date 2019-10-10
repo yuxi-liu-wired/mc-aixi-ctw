@@ -199,44 +199,44 @@ class KuhnPoker(environment.Environment):
         return self.observation, self.reward
     # end def
 
-    def print(self):
-        """ Returns a string indicating the status of the environment.
-        """
-        print("==" * 20)
-        print(f"Reward :{self.reward-2}")
-        print(f"Agent Actions :{kp_action_enum[self.action]}")
-        print(
-            f"Opponent Actions :{kp_opponent_observation_enum[self.op_action_1]}")
-        print(f"Agent has card : {kp_card_observation_enum[self.agent_card]}")
-        print(f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
-        print(self)
-    # end def
-
-    # TODO: what is this for?
-    def running(self):
-        while not self.is_finished:
-
-            print(self)
-            print("==" * 20)
-            print(f"Reward of last game: {self.reward-2}")
-            print(f"Your card is:{kp_card_observation_enum[self.agent_card]}")
-            print(
-                f"Opponent choose to : {kp_opponent_observation_enum[self.op_action_1]}")
-            print(
-                f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
-
-            action = input("Action is :  ")
-
-            if action == "bet":
-
-                action = 0
-
-            elif action == "pass":
-
-                action = 1
-
-            self.perform_action(action)
-
-        print("**" * 20)
-        print('{:^40}'.format("Game Over"))
-        print("**" * 20)
+#    def print(self):
+#        """ Returns a string indicating the status of the environment.
+#        """
+#        print("==" * 20)
+#        print(f"Reward :{self.reward-2}")
+#        print(f"Agent Actions :{kp_action_enum[self.action]}")
+#        print(
+#            f"Opponent Actions :{kp_opponent_observation_enum[self.op_action_1]}")
+#        print(f"Agent has card : {kp_card_observation_enum[self.agent_card]}")
+#        print(f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
+#        print(self)
+#    # end def
+#
+#    # TODO: what is this for?
+#    def running(self):
+#        while not self.is_finished:
+#
+#            print(self)
+#            print("==" * 20)
+#            print(f"Reward of last game: {self.reward-2}")
+#            print(f"Your card is:{kp_card_observation_enum[self.agent_card]}")
+#            print(
+#                f"Opponent choose to : {kp_opponent_observation_enum[self.op_action_1]}")
+#            print(
+#                f"Opponent has card : {kp_card_observation_enum[self.op_card]}")
+#
+#            action = input("Action is :  ")
+#
+#            if action == "bet":
+#
+#                action = 0
+#
+#            elif action == "pass":
+#
+#                action = 1
+#
+#            self.perform_action(action)
+#
+#        print("**" * 20)
+#        print('{:^40}'.format("Game Over"))
+#        print("**" * 20)

@@ -25,7 +25,7 @@ from __future__ import unicode_literals
 
 import os
 import sys
-
+import gc 
 import six.moves.configparser as configparser
 
 try:
@@ -166,7 +166,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
         # Update the agent's environment model with the chosen action.
         agent.model_update_action(action)
-
+        
+        agent.bits_changed  = 0
+        
         # Calculate how long this cycle took.
         time_taken = datetime.datetime.now() - cycle_start
 
@@ -202,6 +204,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
         # Update the cycle count.
         cycle += 1
+        
+        if cycle%100 == 0:
+            gc.collect()
     # end while
 
     # Print summary to standard output.
@@ -210,6 +215,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
               "average reward: %f" % agent.average_reward()
 
     print(message)
+    
+
+        
 # end def
 
 def main(argv):
@@ -308,7 +316,7 @@ def main(argv):
                 command_line_options["exploration"] = float(arg)
                 continue
             # end if
-            if opt in ('-s', '--swap'):
+            if opt in ('-s', '--second'):
                 second_enviroment =  arg.split(",")[0]
                 start_time        =  arg.split(",")[1]
                 command_line_options["second_enviroment"] = [str(second_enviroment),int(start_time)]
@@ -495,6 +503,7 @@ def usage():
               "                      [-t | --ct-depth <maximum depth of predicting context tree>]" + os.linesep + \
               "                      [-x | --exploration <exploration factor, greater than 0>]" + os.linesep + \
               "                      [-v | --verbose]" + os.linesep + \
+               "                     [-s | --second <second enviroment need to be run,time to change>]" + os.linesep + \
               "                      [<configuration file name to load>]" + os.linesep + os.linesep
 
     sys.stderr.write(message)
