@@ -173,6 +173,15 @@ class CTWContextTreeNode:
         
         # the symbol count should be non-negative
         self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
+        
+        #remove uneccessary child
+        if symbol in self.children:
+            
+            child = self.children[symbol]
+            
+            if sum(child.symbol_count.values()) ==  0:
+                
+                del self.children[symbol]
               
         #calculating the log probability relies on the kt estimater
         #update the kt estimator before updating the log probability          
