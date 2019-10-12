@@ -15,7 +15,7 @@ import random
 from six.moves import xrange
 from collections import deque
 from copy import deepcopy
-from numba import jit
+
 # The value ln(0.5).
 # This value is used often in computations and so is made a constant for efficiency reasons.
 log_half = math.log(0.5)
