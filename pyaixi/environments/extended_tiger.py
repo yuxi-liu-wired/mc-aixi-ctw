@@ -33,10 +33,10 @@ tiger_action_enum = util.enum('stand','listen','open_left_door','open_right_door
 tiger_observation_enum = util.enum('left','right','void')
 
 # Reward ranges from 0 to 130, encoded in 8 bits.
-# 0(-100) reward is given by choosing the worst action: open the door with tiger hiding behind.
+# 0(-100) reward is given by choosing the worst action: opening the door with tiger hiding behind.
 # 90(-10) reward is given by choosing an 'invalid' action: e.g. stand while standing.
-# 99(-1)  reward is given by choosing an 'valid' action: e.g. stand sitting.
-# 130(30) reward is given by choosing the best action: open the door with gold behind.
+# 99(-1)  reward is given by choosing an 'valid' action: e.g. stand while sitting.
+# 130(30) reward is given by choosing the best action: opening the door with gold behind.
 tiger_reward_enum = util.enum(penalty = 90, eaten = 0, gold = 130, normal = 99)
 
 # 2 states, encoded in 1 bit.
