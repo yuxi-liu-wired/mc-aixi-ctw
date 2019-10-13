@@ -5,7 +5,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import random
 import sys
 
 # Insert the package's parent directory into the system search path, so that this package can be
@@ -116,8 +115,6 @@ class CheeseMaze(environment.Environment):
         # read coordinates of mouse
         y,x = self.mouse
         
-        # set current observation
-        observation = self.observation
         
         # movement effect of different direction
         if action == up:
@@ -135,15 +132,14 @@ class CheeseMaze(environment.Environment):
             self.reward = wall # penalty reward for bumping into wall
         else:
             self.mouse = (y,x) # update agent coordinate
-            observation = self.maze[self.mouse] # store the observation of current location
-            self.observation = observation 
+            self.observation = self.maze[self.mouse]
             self.reward = move # reward for a valid movement
             if self.cheese == (y,x): # agent found the cheese
 #                print("YOU GOT CHEESE!!!!")
                 self.reward += cheese # adding cheese reward to self.reward result in max(reward) = 29 (5 bit)
                 self.clear_restart() # restart the game by resetting agent location and observation
 #                print(self.mouse)
-        return observation, self.reward
+        return self.observation, self.reward
 
     def clear_restart(self):
         self.mouse = (1,2) # initial position for agent
