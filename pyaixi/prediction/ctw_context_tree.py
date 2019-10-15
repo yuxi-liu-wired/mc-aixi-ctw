@@ -174,7 +174,10 @@ class CTWContextTreeNode:
         # the symbol count should be non-negative
         self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
         
-        #remove uneccessary child
+        # remove uneccessary child,
+        # otherwise, it will throw the memory error.
+        # As during the mcts, we are very likely to create lots
+        # of impossible nodes.  (find during experiments)
         if symbol in self.children:
             
             child = self.children[symbol]
@@ -259,6 +262,8 @@ class CTWContextTreeNode:
         """
 
         # TODO: implement
+        #if it is leaf node, then the probability is just the kt-probability
+        # otherwise, we calculate the probability based it's children.
         if self.is_leaf_node():
             
             self.log_probability = self.log_kt
@@ -481,6 +486,8 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        # consider the input is str, list or int.
+        # if it is not list, we need to transfer to type int
         if isinstance(symbol_list,int):
             
             symbol_list = [symbol_list]
@@ -492,21 +499,14 @@ class CTWContextTree:
         # As we are doing mixture Markov model, 
         # the largest order is depth-th order. 
         # The history length at least bigger than the depth.
-        # If not, we can only calculate log uniform probability.
-        # another approach could be uniformly generate the history,
+        # If not, we can uniformly generate the history,
         # and doing the prediction.
-        '''
-        if len(symbol_list) + len(self.history)  < self.depth + 1:
-            
-             return math.log(math.pow(0.5,len(symbol_list)))
         
-        '''
         difference  = self.depth - len(self.history)
         
         if difference > 0:
             
             self.update([random.randint(0,1) for i in range(difference)])
-        
         
         h  = self.root.log_probability
         
@@ -587,6 +587,8 @@ class CTWContextTree:
         """
 
         # TODO: implement
+        # consider the input is str, list or int.
+        # if it is not list, we need to transfer to type int
         if isinstance(symbol_list,int):
             
             symbol_list = [symbol_list]
