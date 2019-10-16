@@ -152,10 +152,10 @@ class CTWContextTreeNode:
         
         b = self.symbol_count[1]
         
-        #find out which bit is we are try to predict next, 0 or 1.
+        #find out which bit is we have based the current symbol counts, 0 or 1.
         numerator  = b if symbol else a
         
-        log_Pr_kt = math.log((numerator + 0.5)/(a + b + 1))
+        log_Pr_kt = math.log((numerator + 0.5)/(a + b +  1))
         
         return log_Pr_kt
     # end def
@@ -171,13 +171,15 @@ class CTWContextTreeNode:
         # TODO: implement
         symbol = int(symbol)
         
-        # the symbol count should be non-negative
-        self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
         
         # remove uneccessary child,
         # otherwise, it will throw the memory error.
         # As during the mcts, we are very likely to create lots
         # of impossible nodes.  (find during experiments)
+        # Also, if we donot remove uneccessary chirlds
+        # we will get inaccurate probability for each of non-leaf node.
+        # because the leaf node is the base case for our recursive appraoch 
+        # of calculating probability.
         if symbol in self.children:
             
             child = self.children[symbol]
@@ -185,10 +187,19 @@ class CTWContextTreeNode:
             if sum(child.symbol_count.values()) ==  0:
                 
                 del self.children[symbol]
+                
+                
+        #consistent with log_kt_multiplier
+        
+        # the symbol count should be non-negative
+        self.symbol_count[symbol]  = max(0, self.symbol_count[symbol]-1)
               
         #calculating the log probability relies on the kt estimater
-        #update the kt estimator before updating the log probability          
+        #update the kt estimator before updating the log probability   
         self.log_kt -= self.log_kt_multiplier(symbol)
+        
+        #the probability is depend on the kt estimater, so
+        # it should be update at end.
         
         self.update_log_probability()
     # end def
@@ -215,13 +226,15 @@ class CTWContextTreeNode:
         
         symbol = int(symbol)
         
-        #updating the symbol counts before calling log_kt_multiplier
-        #will result in double count of the symbols
         
         self.log_kt+=self.log_kt_multiplier(symbol)
-            
+       
+        #consistent with log_kt_multiplier function
+
         self.symbol_count[symbol]+=1
-        
+       
+        #the probability is depend on the kt estimater, so
+        # it should be update at end.
         self.update_log_probability()
         
     # end def
@@ -269,6 +282,8 @@ class CTWContextTreeNode:
             self.log_probability = self.log_kt
             
         else:
+            # as we update from leaf to root, thus the chirldren's probabiltiy
+            # must already been updated.
             children = sum([subnode.log_probability for _,subnode in self.children.items()])
             # a > b -> smallest exp(log(b) - log(a))
             # a should be larger than b.
@@ -295,6 +310,11 @@ class CTWContextTree_Undo:
     CTWContextTree, and we can revert symbols in 
     a efficient way.That trades the computation 
     power with storage.
+    
+    In order to revert a 24 bits sequence, assume we have 96 ctw depth.
+    we need to do 24  * 96 constant operations in the traditional appraoch. However,
+    Using the CTWContextTree_Undo class, we can revert CTWContextTree to previous state
+    within 1 constant operations.
 
     '''
     
@@ -376,6 +396,9 @@ class CTWContextTree:
     def set_tade_off(self,value):
         '''
         set the trade off between computation power and storage
+        only take bool value as  input. If the value is true,
+        we will use the CTWContextTree_Undo class, otherwise 
+        we use traditional approach in the revret operations.
         
         '''
         
@@ -420,28 +443,26 @@ class CTWContextTree:
         return symbol_list
     # end def
     
-    def generate_random_actions(self,action_binary):
+    def maximum_likelihood_sequence(self,action_binary):
         
         '''
             action_binary: [[]]
             
-            selection the actions according to their likelihood
+            selection the maximum likelihood action
             - 'action_binary': [[]] : the list of binary representations of actons
         '''
         
-        probabilities = []
-        
+        current_p = float("-INF")
+        ml_action = None
         for action in action_binary:
             
             p = self.predict(action)
             
-            probabilities.append(p)
-            
-        index = random.choices(range(len(action_binary)),weights = probabilities,k=1)[0]
+            if p > current_p:
+                ml_action = action
+                current_p = p
         
-        action = action_binary[index]
-        
-        return action
+        return ml_action
         
         
 
@@ -502,7 +523,8 @@ class CTWContextTree:
         # If not, we can uniformly generate the history,
         # and doing the prediction.
         
-        difference  = self.depth - len(self.history)
+        #note the root represent zero context
+        difference  = self.depth + 1 - len(self.history)
         
         if difference > 0:
             

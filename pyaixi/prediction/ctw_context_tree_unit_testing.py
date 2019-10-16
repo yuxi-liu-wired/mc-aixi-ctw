@@ -13,10 +13,12 @@ from collections import Counter
 import math
 from copy import deepcopy
 
+#calculate log kt estimater.
 def log_kt(random_string):
     (_,a),(_,b) = Counter(random_string).most_common()
     return calculate_log_kt(a,b)
 
+#naive appraoch of calculate kt estimater.
 def calculate_log_kt(a,b):
     
     if a==0 and b==0:
@@ -26,22 +28,25 @@ def calculate_log_kt(a,b):
     else:
         return math.log((b - 1 + 0.5 )/ (a + b - 1 + 1)) + calculate_log_kt(a,b-1)
     
-    
+#used to generate random binary string    
 def random_Binarystring():
     result = random.randint(0, 10000)
     random_string = bin(result)[2:]
     return random_string
 
+#used to test ctw node
 def feed_ctwnode(string,node):
     for bit in string:
         node.update(bit)
     return node
 
+#used to test ctw node
 def revert_ctwnode(string,node):
     for bit in string:
         node.revert(bit)
     return node
 
+#check whether two class have same fields.
 def check_fieldvalue(node1,node2):
     
     field_1 = node1.__dict__
@@ -65,8 +70,8 @@ def check_fieldvalue(node1,node2):
 
 class TestCTWContextTreeNode(unittest.TestCase):
     
-    #Simplying consider the number of 1s and 0s in the random string
-    #To check if the function is functional correct
+    # Simplying consider the number of 1s and 0s in the random string
+    # To check if the function is functional correct
     # Test update
     def test_log_kt_multiplier(self):
         node = CTWContextTreeNode()
@@ -153,6 +158,7 @@ def count_context(past,sequence,context,a):
 
 class TestCTWContextTree(unittest.TestCase):
     
+    #test functionality of updating
     def test_update(self):
         tree = CTWContextTree(3)
         tree.update("110")
@@ -164,7 +170,8 @@ class TestCTWContextTree(unittest.TestCase):
         ground_truth_b = count_context("110","01001100","10","1")
         self.assertEqual(a,ground_truth_a,"incorrect update")
         self.assertEqual(b,ground_truth_b,"incorrect update")
-        
+       
+    #test functionality of prediction, example retrieved from CTW lecture slides.    
     def test_predict(self):
         tree = CTWContextTree(3)
         tree.update("110")
@@ -181,11 +188,12 @@ class TestCTWContextTree(unittest.TestCase):
         t = True
         
         for epoch in range(10):
-           t = t and (tree.generate_random_actions(action) in action)
+           t = t and (tree.maximum_likelihood_sequence(action) in action)
         
         assert t, "invalid random actions"
         
-        
+    #test functionality of revert state. By replacing the tree to previous state
+    #instead of revert bit by bit.        
     def test_model_revert(self):
         tree = CTWContextTree(3)
         tree.set_tade_off(True)
