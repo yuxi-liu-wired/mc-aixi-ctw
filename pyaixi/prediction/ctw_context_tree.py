@@ -526,6 +526,8 @@ class CTWContextTree:
         difference  = self.depth  - len(self.history)
         
         if difference > 0:
+            #by doing this, please keep in mind, please reset the whole (exclude the real history)
+            #tree after each mc-simulation if the history < tree depth before mc-simulation.
             self.update([random.randint(0,1) for i in range(difference)])
         
         h  = self.root.log_probability
