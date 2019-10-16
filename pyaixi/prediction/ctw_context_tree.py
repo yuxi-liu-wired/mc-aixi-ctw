@@ -681,8 +681,8 @@ class CTWContextTree:
         eg: depth 3, history 110001b
                                 CCCR 
                                 
-        b is the context of 1, 01, 001,
-        as context is considered from tree leaf to node
+        empty string, 1, 01, 001 is the context of b.
+        and context is find from tree leaf to node.
         
         '''
         
