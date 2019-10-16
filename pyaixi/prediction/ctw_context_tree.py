@@ -682,7 +682,8 @@ class CTWContextTree:
                                 CCCR 
                                 
         empty string, 1, 01, 001 is the context of b.
-        and context is find from tree leaf to node.
+        and context is found from tree leaf to node.
+        please read the context from right to left.
         
         '''
         
