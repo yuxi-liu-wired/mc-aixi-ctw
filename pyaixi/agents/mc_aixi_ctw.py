@@ -340,8 +340,14 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.age = undo_instance.age
         self.total_reward = undo_instance.total_reward
         self.last_update = undo_instance.last_update
-        
-        self.context_tree.revert(self.bits_changed)
+        difference = self.context_tree.depth  - undo_instance.history_size
+        if difference <= 0:
+            self.context_tree.revert(self.bits_changed)
+        else:
+            history = list(self.context_tree.history)[:self.depth - difference]
+            size_of_history = self.context_tree.size_of_history
+            self.context_tree = ctw_context_tree.CTWContextTree(self.depth,size_of_history - self.depth)
+            self.context_tree.history+= history
         self.bits_changed = 0
         
         '''
@@ -479,9 +485,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """ Returns the best action for this agent as determined using the Monte-Carlo Tree Search
             (predictive UCT).
         """
-
         # Use ρUCT to search for the next action.
-        
         return mcts_planning(self, self.horizon, self.mc_simulations)
     # end def
 # end class

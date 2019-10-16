@@ -289,8 +289,7 @@ class CTWContextTreeNode:
             # a should be larger than b.
             a,b = sorted([self.log_kt,children],reverse = True)
             self.log_probability = log_half + a + math.log(1 + math.exp(b-a))
-                
-    
+          
     # end def
 
     def visits(self):
@@ -524,10 +523,10 @@ class CTWContextTree:
         # and doing the prediction.
         
         #note the root represent zero context
-        difference  = self.depth + 1 - len(self.history)
+        difference  = self.depth  - len(self.history)
         
         if difference > 0:
-            
+            return 1/2**(len(symbol_list))
             self.update([random.randint(0,1) for i in range(difference)])
         
         h  = self.root.log_probability
@@ -565,6 +564,11 @@ class CTWContextTree:
         # TODO: implement
         
         assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
+        
+        if symbol_count + self.depth < len(self.history):
+            history = deepcopy(self.history)
+            self.clear()
+            self.history = history
             
         # revert the tree in reversed order
         # because of the dependency relationships.
