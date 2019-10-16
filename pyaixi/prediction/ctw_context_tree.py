@@ -526,7 +526,6 @@ class CTWContextTree:
         difference  = self.depth  - len(self.history)
         
         if difference > 0:
-            return 1/2**(len(symbol_list))
             self.update([random.randint(0,1) for i in range(difference)])
         
         h  = self.root.log_probability
@@ -565,11 +564,6 @@ class CTWContextTree:
         
         assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
         
-        if symbol_count + self.depth < len(self.history):
-            history = deepcopy(self.history)
-            self.clear()
-            self.history = history
-            
         # revert the tree in reversed order
         # because of the dependency relationships.
         for step in range(symbol_count):
