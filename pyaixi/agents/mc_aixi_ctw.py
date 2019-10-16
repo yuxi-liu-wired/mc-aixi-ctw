@@ -341,13 +341,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.total_reward = undo_instance.total_reward
         self.last_update = undo_instance.last_update
         difference = self.context_tree.depth  - undo_instance.history_size
-        if difference <= 0:
-            self.context_tree.revert(self.bits_changed)
-        else:
-            history = list(self.context_tree.history)[:self.depth - difference]
-            size_of_history = self.context_tree.size_of_history
-            self.context_tree = ctw_context_tree.CTWContextTree(self.depth,size_of_history - self.depth)
-            self.context_tree.history+= history
+        difference = max(difference,0)
+        self.context_tree.revert(self.bits_changed+difference)
         self.bits_changed = 0
         
         '''

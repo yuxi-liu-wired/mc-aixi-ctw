@@ -202,6 +202,7 @@ class CTWContextTreeNode:
         # it should be update at end.
         
         self.update_log_probability()
+        
     # end def
 
     def size(self):
@@ -566,8 +567,24 @@ class CTWContextTree:
         
         assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
         
+        difference = len(self.history) - symbol_count
+        
+        # if the reverted history will have  len(history) < self.depth
+        # then we just delete whole tree, and store part of hitstory. The situation could 
+        # happends on the begining, as if the ctw depth is large. The initial perception cannot
+        # provide enough context for the incoming bits.
+        # If we revert it, we will result in a invalid log probability which bigger than 0
+        # then the convergency speed will be influenced. 
+        if difference < self.depth :
+            history = deepcopy(list(self.history)[:difference+1])
+            self.clear()
+            self.history += history
+            
+            return None
+        
         # revert the tree in reversed order
         # because of the dependency relationships.
+        
         for step in range(symbol_count):
             
             bit = self.history.pop()
@@ -662,7 +679,7 @@ class CTWContextTree:
         '''
         R for root, C for Children , b for new bit
         eg: depth 3, history 110001b
-                               CCCR 
+                                CCCR 
                                 
         b is the context of 1, 01, 001,
         as context is considered from tree leaf to node
