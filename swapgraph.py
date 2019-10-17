@@ -68,8 +68,8 @@ def draw(cycles,average_rewards,times,labels):
     plt.show()
     
     
-c,r = read("result/cm_swap_kp.log")
-draw(c,r,[1000,2000,4000],["Kuhn Poker","Extended Tiger","Kuhn Poker"])
+c,r = read("tiger_swap_kp.log")
+draw(c,r,[1250,3750,5000],["Kuhn Poker","Extended Tiger","Kuhn Poker"])
     
     
     
