@@ -110,10 +110,13 @@ def interaction_loop(agent = None, environment = None, options = {}):
 
     # Whether AIXI would face a second enviroment.
     second_enviroment_start_time = -1
+    second_enviroment_end_time = -1
+    first_enviroment_name = options["environment"]
     if "second_enviroment" in options:
         second_enviroment_start_time = options["second_enviroment"][1]
         second_enviroment_name = options["second_enviroment"][0]
-
+        second_enviroment_end_time = options["second_enviroment"][2]
+        
     while not environment.is_finished:
         # Check for agent termination.
         if terminate_check and agent.age > terminate_age:
@@ -124,7 +127,12 @@ def interaction_loop(agent = None, environment = None, options = {}):
             second_enviroment_start_time = -1
             agent, environment = load(second_enviroment_name, agent,options)
         # end if
-
+        
+        elif cycle == second_enviroment_end_time: # Time to end second environment.
+            
+            second_enviroment_end_time = -1
+            agent, environment = load(first_enviroment_name, agent,options)
+                
         # Save the current time to compute how long this cycle took.
         cycle_start = datetime.datetime.now()
 
@@ -319,7 +327,8 @@ def main(argv):
             if opt in ('-s', '--second'):
                 second_enviroment =  arg.split(",")[0]
                 start_time        =  arg.split(",")[1]
-                command_line_options["second_enviroment"] = [str(second_enviroment),int(start_time)]
+                end_time        =  arg.split(",")[2]
+                command_line_options["second_enviroment"] = [str(second_enviroment),int(start_time),int(end_time)]
 
 
         # end for
@@ -503,7 +512,7 @@ def usage():
               "                      [-t | --ct-depth <maximum depth of predicting context tree>]" + os.linesep + \
               "                      [-x | --exploration <exploration factor, greater than 0>]" + os.linesep + \
               "                      [-v | --verbose]" + os.linesep + \
-               "                     [-s | --second <second enviroment need to be run,time to change>]" + os.linesep + \
+               "                     [-s | --second <second enviroment need to be run,time to change,time to change back>]" + os.linesep + \
               "                      [<configuration file name to load>]" + os.linesep + os.linesep
 
     sys.stderr.write(message)
