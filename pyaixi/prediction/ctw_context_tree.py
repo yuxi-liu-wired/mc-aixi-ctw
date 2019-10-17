@@ -484,6 +484,11 @@ class CTWContextTree:
             # if we sample infinite bits at a particular history
             # Then the lim t->inf 1s/0s = self.predict(1) / self.predict(0),
             # as we choose the threshold from uniform distribution.
+            # Consider the following sequence, b_1 b_2 …. b_d. 
+            # The probability of having the sequence is  P = (b_1 b_2 …. b_d | history)  
+            # and we could apply chain  rule P = (b_1 b_2 …. b_d | history)  =  
+            # (b_2 …. b_d | history b_1) *  (b_1| history)
+            #= (b_1| history) * (b_2| history b_2) * ….  (b_d | history b_1… b_(d-1) )
             
             sample.append(1 if self.predict(1) >= random.random() else 0)
             
@@ -569,15 +574,12 @@ class CTWContextTree:
         
         difference = len(self.history) - symbol_count
         
-        # The theory is same as the Discrete Probability Mass Function
-        # if we sample infinite bits at a particular history
-        # Then the lim t->inf 1s/0s = self.predict(1) / self.predict(0),
-        # as we choose the threshold from uniform distribution.
-        # Consider the following sequence, b_1 b_2 …. b_d. 
-        # The probability of having the sequence is  P = (b_1 b_2 …. b_d | history)  
-        # and we could apply chain  rule P = (b_1 b_2 …. b_d | history)  =  
-        # (b_2 …. b_d | history b_1) *  (b_1| history)
-        #= (b_1| history) * (b_2| history b_2) * ….  (b_d | history b_1… b_(d-1) )
+        # if the reverted history will have  len(history) < self.depth
+        # then we just delete whole tree, and store part of hitstory. The situation could 
+        # happends on the begining, as if the ctw depth is large. The initial perception cannot
+        # provide enough context for the incoming bits.
+        # If we revert it, we will result in a invalid log probability which bigger than 0
+        # then the convergency speed will be influenced. 
         if difference < self.depth :
             history = deepcopy(list(self.history)[:difference+1])
             self.clear()
