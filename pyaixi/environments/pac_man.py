@@ -47,6 +47,7 @@ direction = {
 
 direction_list = [[1,0],[-1,0],[0,-1],[0,1]]
 
+#define the rules for getting reward
 rule = {
         "movement": -1,
         "wall"    : -10,
@@ -56,7 +57,7 @@ rule = {
         "pill"    : 10,
         "eat_g"   : 30
         }
-
+#how much we need to add at most, in order to make the finial reward to be non-negative
 compensate = sum([abs(v) for v in rule.values() if v < 0])
 
 class PacMan(environment.Environment):
@@ -278,7 +279,7 @@ class PacMan(environment.Environment):
             row+=1
             
         for name,positon in self.monster.items():
-            
+            #make the layout clean
             x,y = positon
             self.layout[x][y] = " "
             
@@ -286,7 +287,7 @@ class PacMan(environment.Environment):
         
     def restart(self):
         '''
-        restart the enviroment
+        restart the enviroment, and initialize the fields.
         
         '''
         self.rows = 0
@@ -358,6 +359,7 @@ class PacMan(environment.Environment):
             x,y = self.pacman
         on_map = self.layout[x][y]
         
+        #wall and pellet can not be in the same location
         if on_map == "*":
             
             self.reward += rule["pellet"]
@@ -373,7 +375,7 @@ class PacMan(environment.Environment):
             x,y = self.pacman
             
         
-            
+        # monster and pellet can be in the same location    
         if [x,y] in self.monster.values():
             
             if self.super_pacman:
@@ -409,6 +411,7 @@ class PacMan(environment.Environment):
                 self.restart()
                 return past_reward, self.observation
                 
+        #check if it is power pill
         if on_map == "S":
                 
             self.reward+=rule["pill"]
