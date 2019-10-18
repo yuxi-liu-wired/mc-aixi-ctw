@@ -136,8 +136,7 @@ class KuhnPoker(environment.Environment):
         self.valid_observations = [0, 1, 2, 3, 4, 5]
 
         # Defines the acceptable reward values.
-        self.valid_rewards = list(
-            kp_bet_reward_enum.keys()) + list(kp_bet_reward_enum.keys())
+        self.valid_rewards = list(kp_bet_reward_enum.keys())
 
         self.reward = 0
         self.restart()

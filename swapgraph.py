@@ -54,22 +54,26 @@ def draw(cycles,average_rewards,times,labels):
     plt.figure(figsize=(9, 6))
     
     for index,time in enumerate(times):
-        rcy = cycles[last:time]
-        rav = average_rewards[last:time]
+        if last != 0:
+            rcy = cycles[last+1:time]
+            rav = average_rewards[last+1:time]
+        else:
+            rcy = cycles[last:time]
+            rav = average_rewards[last:time]
         label = labels[index]
         last = time
         smoothed_cycles,smoothed_average_rewards = smooth(rcy,rav) #change number of interval wants at here
         p = plt.plot(smoothed_cycles,smoothed_average_rewards,'-',lw = 2,label = label)
         plt.plot(smoothed_cycles,smoothed_average_rewards,'D',color = p[0].get_color())
         
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right")
     plt.title(f"Swap enviroments : Kuhn Poker and Extended Tiger")
     plt.plot()
     plt.show()
     
     
-c,r = read("tiger_swap_kp.log")
-draw(c,r,[1250,3750,5000],["Kuhn Poker","Extended Tiger","Kuhn Poker"])
+c,r = read("mc_swap_kp.log")
+draw(c,r,[1250,3750,5000],["Kuhn Poker","Cheese Maze","Kuhn Poker"])
     
     
     
