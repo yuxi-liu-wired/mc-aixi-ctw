@@ -255,7 +255,10 @@ def main(argv):
         conf_directory = default_options["conf_directory"]
 
     conf_path = parent_path + f"{sep}{conf_directory}"
-    conf_files = [f for f in os.listdir(conf_path) if f.endswith(".conf")]
+    try:
+        conf_files = [f for f in os.listdir(conf_path) if f.endswith(".conf")]
+    except FileNotFoundError:
+        pass
 
     #where your store ur log information
     if "experimental_result" in command_line_options:
