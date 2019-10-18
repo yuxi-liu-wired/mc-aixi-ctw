@@ -211,7 +211,7 @@ class KuhnPoker(environment.Environment):
 #        print(self)
 #    # end def
 #
-#    # TODO: what is this for?
+#    
 #    def running(self):
 #        while not self.is_finished:
 #

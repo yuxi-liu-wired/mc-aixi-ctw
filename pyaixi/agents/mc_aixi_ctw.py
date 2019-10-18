@@ -127,26 +127,26 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         assert 'ct-depth' in options, \
                "The required 'ct-depth' context tree depth option is missing from the given options."
         self.depth = int(options['ct-depth'])
-        
+
         # estimate how many bits we need to keep in history of ctw at most
         # each iterations of mc search takes horizon * (actions bits + percept-bits)
-        # and generating the perceptio need to update and revert. 
+        # and generating the perceptio need to update and revert.
         # for the safely reason, I make it slight larger.
-        
+
         try:
-            
+
             estimate_bits = (options["action-bits"] + options["percept-bits"]) * \
                                 int(options['agent-horizon']) * 5
-                   
+
         except KeyError:
-            
+
             estimate_bits = None
-        
+
         # (CTW) Context tree representing the agent's model of the environment.
         # Created for this instance.
-        
+
         self.context_tree = ctw_context_tree.CTWContextTree(self.depth,estimate_bits)
-        
+
         # using the length difference of history size wouldnt work know,
         # as the maximum length of history wouldnt change, all we can do is
         # recoding how many bits changed during the mcts.
@@ -287,12 +287,12 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.bits_changed += len(percept_symbol)
         self.total_reward += reward
         self.last_update = percept_update
-        
+
         return observation, reward
     # end def
 
     ## Inquire its model for probability of future.
-    # TODO: what is this for?
+
     def action_probability(self, action):
         """ Returns the probability of selecting a particular action according to the
             agent's internal model of its own behaviour.
@@ -303,7 +303,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return self.context_tree.predict(self.encode_action(action))
     # end def
 
-    # TODO: what is this for?
+
     def percept_probability(self, observation, reward):
         """ Returns the probability of receiving percept (observation, reward),
             according to the agent's environment model.
@@ -322,7 +322,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         return len(self.context_tree.history)
     # end def
 
-    # TODO: what is this for?
+
     def maximum_bits_needed(self):
         """ Returns the maximum number of bits needed to represent actions or percepts.
             NOTE: this is for binary alphabets.
@@ -344,7 +344,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         difference = max(difference,0)
         self.context_tree.revert(self.bits_changed+difference)
         self.bits_changed = 0
-        
+
         '''
         old_history_size = undo_instance.history_size
         current_history_size = self.history_size()
@@ -388,7 +388,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         self.context_tree.update(action_symbols)
 
         self.bits_changed += len(action_symbols)
-        
+
         # Update other properties.
         self.age += 1
         self.last_update = action_update
@@ -417,7 +417,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         else:
             # Yes. Update and learn.
             self.context_tree.update(percept_symbols)
-            
+
             #self.bits_changed += len(percept_symbols)
         # end if
 
@@ -427,7 +427,6 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
     # end def
 
-    # TODO: is this useful? It is not used anywhere in the project.
     def generate_ctw_random_action(self, ctw):
         ''' Generates a random action.
         '''

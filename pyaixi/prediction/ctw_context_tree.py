@@ -146,7 +146,7 @@ class CTWContextTreeNode:
              1 corresponds to calculating `log(Pr_kt(1 | 0^a 1^b)`.
         """
 
-        # TODO: implement
+        
         
         a = self.symbol_count[0]
         
@@ -168,7 +168,7 @@ class CTWContextTreeNode:
             - `symbol`: the symbol used in the previous update.
         """
 
-        # TODO: implement
+        
         symbol = int(symbol)
         
         
@@ -220,7 +220,7 @@ class CTWContextTreeNode:
             - `symbol`: the symbol that was observed.
         """
 
-        # TODO: implement
+        
         
         # The log turns the multiple to plus, 
         # and our approach is updating the whole tree from leaf to root
@@ -275,7 +275,7 @@ class CTWContextTreeNode:
             the argument of the exponent `exp(log(b) - log(a))` is as small as possible.
         """
 
-        # TODO: implement
+        
         #if it is leaf node, then the probability is just the kt-probability
         # otherwise, we calculate the probability based it's children.
         if self.is_leaf_node():
@@ -474,7 +474,7 @@ class CTWContextTree:
             - `symbol_count`: the number of symbols to generate.
         """
 
-        # TODO: implement
+        
         
         sample =[]
         
@@ -511,7 +511,7 @@ class CTWContextTree:
                             0 corresponds to `rho(0 | h)` and 1 to `rho(1 | h)`.
         """
 
-        # TODO: implement
+        
         # consider the input is str, list or int.
         # if it is not list, we need to transfer to type int
         if isinstance(symbol_list,int):
@@ -568,7 +568,7 @@ class CTWContextTree:
      
             - `num_symbols`: the number of updates (symbols) to revert. (Default of 1.)
         """
-        # TODO: implement
+        
         
         assert len(self.history) >= symbol_count, "Cannot revert, symbol_count bigger than the length of history"
         
@@ -630,7 +630,7 @@ class CTWContextTree:
                               (The context tree is updated with symbols in the order they appear in the list.)
         """
 
-        # TODO: implement
+        
         # consider the input is str, list or int.
         # if it is not list, we need to transfer to type int
         if isinstance(symbol_list,int):
@@ -679,7 +679,7 @@ class CTWContextTree:
             Creates the nodes if they do not exist.
         """
 
-        # TODO: implement
+        
         
         '''
         R for root, C for Children , b for new bit

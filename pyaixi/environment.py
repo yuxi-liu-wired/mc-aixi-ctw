@@ -129,7 +129,7 @@ class Environment:
         """ Returns the maximum possible observation.
         """
 
-        # TODO: implement
+        
         return max(self.valid_observations)
     # end def
 
