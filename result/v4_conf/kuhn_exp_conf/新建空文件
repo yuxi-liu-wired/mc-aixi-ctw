@@ -1,2 +1,0 @@
-cd home/xdjf/v4/mc-aixi-ctw_implementation/
-python3 aixi.py -v cheesemaze_conf/cheese_maze_mc_100.conf | tee -a cheese_maze_mc_100.log
