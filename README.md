@@ -6,7 +6,7 @@ The agent is based on [(Veness *et al*, 2011)](http://www.jveness.info/publicati
 
 #### Authors
 
-This is a group project for [COMP4620: Advanced Topics in Artificial Intelligence, in Australian National University, 2019 Semester 2](https://archive.is/egsGB). The group started with six people, but two dropped out half-way through. The remaining four people contributed roughly equally.
+This is a group project for [COMP4620: Advanced Topics in Artificial Intelligence, in Australian National University, 2019 Semester 2](https://archive.is/egsGB). The group started with six people, but two dropped out early on. The remaining four people contributed roughly equally.
 
 #### File structure
 
