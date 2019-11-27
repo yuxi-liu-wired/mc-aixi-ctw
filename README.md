@@ -2,7 +2,7 @@
 
 Implements the Monte Carlo AIXI agent with [context tree weighting](https://ieeexplore.ieee.org/document/382012), a computable approximation of [AIXI](https://en.wikipedia.org/wiki/AIXI), and tests it in a wide variety of game environments.
 
-The agent is based on [(Veness *et al*, 2011)](http://www.jveness.info/publications/jair2010%20-%20mc_aixi_approx.pdf). A [skeletal implementation by G. Kassel](https://github.com/gkassel/pyaixi), was given by the instructor, upon which we added most of the meat.
+The agent is based on [(Veness *et al*, 2011)](http://www.jveness.info/publications/jair2010%20-%20mc_aixi_approx.pdf). A [skeletal implementation by G. Kassel](https://github.com/gkassel/pyaixi) was given by the instructor, upon which we added most of the meat.
 
 #### Authors
 
