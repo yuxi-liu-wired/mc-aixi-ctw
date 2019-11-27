@@ -1,6 +1,6 @@
 # AIXI ANU 2019
 
-Implements AIXI, the universal AI agent, and tests it in a wide variety of game environments.
+Implements the Monte Carlo AIXI agent of [(Veness *et al*, 2011)](http://www.jveness.info/publications/jair2010%20-%20mc_aixi_approx.pdf), a computable approximation of [AIXI](https://en.wikipedia.org/wiki/AIXI), and tests it in a wide variety of game environments.
 
 A skeletal implementation written by G. Kassel, taken from [gkassel/pyaixi](https://github.com/gkassel/pyaixi), is given by the instructor, upon which we added most of the meat.
 
