@@ -18,5 +18,5 @@ This is a group project during Australian National University, 2019 Semester 2.
 #### File structure
 
 -   `pyaixi`: Python code that implements AIXI.
--   `report`: LaTeX, Pandoc, and images that are used to generate the report.
+-   `report`: LaTeX and images that are used to generate the report.
 -   `AIXI-MC-CTW.pdf`: Assignment document.
