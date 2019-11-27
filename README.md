@@ -6,17 +6,10 @@ A skeletal implementation written by G. Kassel, taken from [gkassel/pyaixi](http
 
 #### Authors
 
-This is a group project during Australian National University, 2019 Semester 2.
-
--   Andrew Tanggara: agent
--   Yuxi Liu: agent
--   Yan Yang: CTW
--   Jiayan Liu: CTW
--   Changle Ye: environment
--   Wenxi Wu: environment
+This is a group project for [COMP4620: Advanced Topics in Artificial Intelligence, in Australian National University, 2019 Semester 2](https://archive.is/egsGB). The group started with six people but two dropped out half-way through. The remaining four people contributed roughly equally.
 
 #### File structure
 
 -   `pyaixi`: Python code that implements AIXI.
--   `report`: LaTeX and images that are used to generate the report.
--   `AIXI-MC-CTW.pdf`: Assignment document.
+-   `report`: LaTeX and images that are used to generate the final report.
+-   Folders that end in `conf`: Configuration files used in testing the agent.
